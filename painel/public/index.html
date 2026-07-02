@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Painel do Estabelecimento — Gaspy BOTZAP</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -9,90 +10,167 @@
 
 <div id="tela-login" class="tela">
   <div class="card-login">
-    <h1>🔒 Painel do Estabelecimento</h1>
-    <p>Informe a senha de acesso configurada no <code>.env</code> (<code>PAINEL_SENHA</code>).</p>
-    <input type="password" id="input-senha" placeholder="Senha do painel">
-    <button id="btn-entrar">Entrar</button>
+    <span class="emoji-grande">🤖</span>
+    <h1>Painel do Estabelecimento</h1>
+    <p>Informe a senha de acesso configurada no arquivo <code>.env</code> (<code>PAINEL_SENHA</code>) para entrar.</p>
+    <input type="password" id="input-senha" placeholder="Digite a senha do painel">
+    <button id="btn-entrar" class="botao-primario">Entrar</button>
     <p id="erro-login" class="erro"></p>
   </div>
 </div>
 
 <div id="tela-app" class="tela oculto">
   <header>
-    <h1>🤖 Gaspy BOTZAP — Painel</h1>
+    <div class="marca">
+      <span class="emoji">🤖</span>
+      <div class="marca-texto">
+        <strong>Gaspy BOTZAP</strong>
+        <span id="nome-estabelecimento-header">Painel do estabelecimento</span>
+      </div>
+    </div>
     <nav>
       <button class="aba-btn ativo" data-aba="cardapio" id="btn-aba-cardapio">🍽️ Cardápio</button>
       <button class="aba-btn" data-aba="pedidos">🧾 Pedidos</button>
       <button class="aba-btn" data-aba="servicos">🔧 Serviços</button>
       <button class="aba-btn" data-aba="config">⚙️ Configurações</button>
     </nav>
+    <button id="btn-sair" class="botao-sair">Sair</button>
   </header>
 
   <main>
     <section id="aba-cardapio" class="aba">
-      <h2 id="titulo-cardapio">Cardápio</h2>
-      <form id="form-novo-item" class="form-linha">
-        <input type="text" name="categoria" placeholder="Categoria" required>
-        <input type="text" name="nome" placeholder="Nome do item" required>
-        <input type="text" name="descricao" placeholder="Descrição (opcional)">
-        <input type="number" name="preco" placeholder="Preço (R$)" step="0.01" min="0" required>
-        <input type="number" name="estoque" placeholder="Estoque (deixe vazio p/ não controlar)" min="0">
-        <button type="submit">+ Adicionar</button>
-      </form>
-      <table id="tabela-cardapio">
-        <thead>
-          <tr><th>Categoria</th><th>Nome</th><th>Descrição</th><th>Preço (R$)</th><th>Estoque</th><th>Disponível</th><th></th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="aba-cabecalho">
+        <h2 id="titulo-cardapio">Cardápio</h2>
+        <p class="ajuda">Adicione, edite o preço e controle a disponibilidade dos seus itens. As mudanças aparecem na hora para quem conversa com o bot.</p>
+      </div>
+
+      <div class="painel-novo-item">
+        <p class="rotulo-form">➕ Adicionar novo item</p>
+        <form id="form-novo-item" class="form-linha">
+          <div class="campo-flutuante">
+            <label for="campo-categoria">Categoria</label>
+            <input id="campo-categoria" type="text" name="categoria" placeholder="Ex: Capinhas" required>
+          </div>
+          <div class="campo-flutuante">
+            <label for="campo-nome">Nome do item</label>
+            <input id="campo-nome" type="text" name="nome" placeholder="Ex: Capinha iPhone 13" required>
+          </div>
+          <div class="campo-flutuante">
+            <label for="campo-descricao">Descrição (opcional)</label>
+            <input id="campo-descricao" type="text" name="descricao" placeholder="Detalhes do item">
+          </div>
+          <div class="campo-flutuante">
+            <label for="campo-preco">Preço (R$)</label>
+            <input id="campo-preco" type="number" name="preco" placeholder="0,00" step="0.01" min="0" required>
+          </div>
+          <div class="campo-flutuante">
+            <label for="campo-estoque">Estoque (opcional)</label>
+            <input id="campo-estoque" type="number" name="estoque" placeholder="Sem limite" min="0">
+          </div>
+          <button type="submit" class="botao-primario">+ Adicionar</button>
+        </form>
+      </div>
+
+      <div class="tabela-wrap">
+        <table id="tabela-cardapio">
+          <thead>
+            <tr><th>Categoria</th><th>Nome</th><th>Descrição</th><th>Preço (R$)</th><th>Estoque</th><th>Disponível</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
     <section id="aba-pedidos" class="aba oculto">
-      <h2>Pedidos</h2>
-      <table id="tabela-pedidos">
-        <thead>
-          <tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Itens</th><th>Total (R$)</th><th>Status</th><th>Data</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="aba-cabecalho">
+        <h2>🧾 Pedidos</h2>
+        <p class="ajuda">Acompanhe as compras feitas pelo WhatsApp. Assim que o cliente pagar via PIX, marque o pedido como "pago".</p>
+      </div>
+      <div class="tabela-wrap">
+        <table id="tabela-pedidos">
+          <thead>
+            <tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Itens</th><th>Total (R$)</th><th>Status</th><th>Data</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
     <section id="aba-servicos" class="aba oculto">
-      <h2>Serviços agendados (manutenção)</h2>
-      <table id="tabela-servicos">
-        <thead>
-          <tr><th>Protocolo</th><th>Cliente</th><th>Telefone</th><th>Aparelho</th><th>Serviço</th><th>Status</th><th>Previsão</th><th>Início</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="aba-cabecalho">
+        <h2>🔧 Serviços agendados</h2>
+        <p class="ajuda">Solicitações de manutenção recebidas pelo WhatsApp. Atualize o status para que o cliente veja a novidade ao consultar o protocolo.</p>
+      </div>
+      <div class="tabela-wrap">
+        <table id="tabela-servicos">
+          <thead>
+            <tr><th>Protocolo</th><th>Cliente</th><th>Telefone</th><th>Aparelho</th><th>Serviço</th><th>Status</th><th>Previsão</th><th>Início</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
     <section id="aba-config" class="aba oculto">
-      <h2>Configurações do estabelecimento</h2>
+      <div class="aba-cabecalho">
+        <h2>⚙️ Configurações do estabelecimento</h2>
+        <p class="ajuda">Esses dados controlam o que o bot fala com o cliente no WhatsApp.</p>
+      </div>
       <form id="form-config" class="form-config">
-        <label>Nome do estabelecimento <input type="text" name="nome"></label>
-        <label>Saudação inicial <textarea name="saudacao" rows="3"></textarea></label>
-        <label>Número do atendente (com DDI, ex: 5511999999999) <input type="text" name="numero_atendente"></label>
-        <label>Horário de atendimento <input type="text" name="horario_atendimento"></label>
-        <label>Mensagem fora do horário <textarea name="mensagem_fora_horario" rows="2"></textarea></label>
-        <label>Mensagem de encerramento <input type="text" name="mensagem_encerramento"></label>
-        <hr>
-        <label>Nome da seção de itens (aparece no painel e no WhatsApp — ex: "🍽️ Cardápio", "🛍️ Loja de Acessórios", "📦 Produtos")
-          <input type="text" name="rotulo_catalogo">
-        </label>
-        <hr>
-        <label>Chave PIX <input type="text" name="chave_pix"></label>
-        <label>Nome do recebedor (PIX) <input type="text" name="pix_nome_recebedor"></label>
-        <label>Cidade (PIX) <input type="text" name="pix_cidade"></label>
-        <hr>
-        <label>Plano
-          <select name="plano">
-            <option value="basico">Básico (menus pré-configurados)</option>
-            <option value="profissional">Profissional (atendimento com IA)</option>
-          </select>
-        </label>
-        <button type="submit">Salvar configurações</button>
-        <p id="config-salvo" class="sucesso oculto">Salvo com sucesso!</p>
+        <fieldset>
+          <legend>Identidade</legend>
+          <label>Nome do estabelecimento
+            <input type="text" name="nome">
+          </label>
+          <label>Saudação inicial <small>(primeira mensagem que o cliente recebe)</small>
+            <textarea name="saudacao" rows="3"></textarea>
+          </label>
+          <label>Nome da seção de itens <small>aparece no painel e no WhatsApp — ex: "🍽️ Cardápio", "🛍️ Loja de Acessórios", "📦 Produtos"</small>
+            <input type="text" name="rotulo_catalogo">
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Atendimento</legend>
+          <label>Número do atendente <small>com DDI, ex: 5511999999999</small>
+            <input type="text" name="numero_atendente">
+          </label>
+          <label>Horário de atendimento
+            <input type="text" name="horario_atendimento">
+          </label>
+          <label>Mensagem fora do horário
+            <textarea name="mensagem_fora_horario" rows="2"></textarea>
+          </label>
+          <label>Mensagem de encerramento
+            <input type="text" name="mensagem_encerramento">
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Pagamento via PIX</legend>
+          <label>Chave PIX
+            <input type="text" name="chave_pix" placeholder="Telefone, e-mail, CPF/CNPJ ou chave aleatória">
+          </label>
+          <label>Nome do recebedor
+            <input type="text" name="pix_nome_recebedor">
+          </label>
+          <label>Cidade do recebedor
+            <input type="text" name="pix_cidade">
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Plano</legend>
+          <label>Tipo de atendimento
+            <select name="plano">
+              <option value="basico">Básico — menus pré-configurados</option>
+              <option value="profissional">Profissional — atendimento com IA</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <button type="submit" class="botao-primario form-config-botao">Salvar configurações</button>
+        <p id="config-salvo" class="sucesso oculto">✅ Salvo com sucesso!</p>
       </form>
     </section>
   </main>

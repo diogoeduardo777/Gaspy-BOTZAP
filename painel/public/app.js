@@ -32,6 +32,10 @@ function esc(texto) {
   return div.innerHTML;
 }
 
+function linhaVazia(colunas, mensagem) {
+  return `<tr class="linha-vazia"><td colspan="${colunas}">${esc(mensagem)}</td></tr>`;
+}
+
 function mostrarTelaLogin(mensagemErro) {
   document.getElementById('tela-login').classList.remove('oculto');
   document.getElementById('tela-app').classList.add('oculto');
@@ -58,6 +62,12 @@ document.getElementById('btn-entrar').addEventListener('click', async () => {
   }
 });
 
+document.getElementById('btn-sair').addEventListener('click', () => {
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('input-senha').value = '';
+  mostrarTelaLogin();
+});
+
 document.querySelectorAll('.aba-btn').forEach((botao) => {
   botao.addEventListener('click', () => {
     document.querySelectorAll('.aba-btn').forEach((b) => b.classList.remove('ativo'));
@@ -72,6 +82,12 @@ document.querySelectorAll('.aba-btn').forEach((botao) => {
 async function carregarCardapio() {
   const itens = await chamarApi('/api/cardapio');
   const corpo = document.querySelector('#tabela-cardapio tbody');
+
+  if (itens.length === 0) {
+    corpo.innerHTML = linhaVazia(7, 'Nenhum item cadastrado ainda. Adicione o primeiro logo acima! 👆');
+    return;
+  }
+
   corpo.innerHTML = '';
   itens.forEach((item) => {
     const linha = document.createElement('tr');
@@ -80,7 +96,7 @@ async function carregarCardapio() {
       <td>${esc(item.nome)}</td>
       <td>${esc(item.descricao)}</td>
       <td>${esc(item.preco_reais)}</td>
-      <td><input type="number" min="0" class="input-estoque" data-id="${item.id}" value="${item.estoque === null ? '' : esc(item.estoque)}" placeholder="—" style="width:70px"></td>
+      <td><input type="number" min="0" class="input-estoque" data-id="${item.id}" value="${item.estoque === null ? '' : esc(item.estoque)}" placeholder="—"></td>
       <td><input type="checkbox" ${item.disponivel ? 'checked' : ''} data-id="${item.id}" class="toggle-disponivel"></td>
       <td><button class="excluir" data-id="${item.id}">Excluir</button></td>
     `;
@@ -124,24 +140,51 @@ document.getElementById('form-novo-item').addEventListener('submit', async (even
 
 // ---------- Pedidos ----------
 
-const STATUS_DISPONIVEIS = ['pendente', 'pago', 'cancelado', 'concluido'];
+const STATUS_PEDIDO = {
+  pendente: 'Pendente',
+  pago: 'Pago',
+  cancelado: 'Cancelado',
+  concluido: 'Concluído'
+};
+
+const CORES_STATUS = {
+  pendente: { bg: '#fef9c3', cor: '#854d0e' },
+  em_analise: { bg: '#fef9c3', cor: '#854d0e' },
+  pago: { bg: '#dcfce7', cor: '#15803d' },
+  concluido: { bg: '#dcfce7', cor: '#15803d' },
+  cancelado: { bg: '#fee2e2', cor: '#b91c1c' },
+  em_manutencao: { bg: '#dbeafe', cor: '#1d4ed8' },
+  aguardando_peca: { bg: '#ffedd5', cor: '#c2410c' }
+};
+
+function colorirStatus(select) {
+  const cor = CORES_STATUS[select.value] || { bg: '#f4f6f8', cor: '#1f2933' };
+  select.style.backgroundColor = cor.bg;
+  select.style.color = cor.cor;
+}
 
 async function carregarPedidos() {
   const pedidos = await chamarApi('/api/pedidos');
   const corpo = document.querySelector('#tabela-pedidos tbody');
+
+  if (pedidos.length === 0) {
+    corpo.innerHTML = linhaVazia(7, 'Nenhum pedido recebido ainda. Assim que um cliente comprar pelo WhatsApp, ele aparece aqui.');
+    return;
+  }
+
   corpo.innerHTML = '';
   pedidos.forEach((pedido) => {
     const descricaoItens = pedido.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(', ');
     const linha = document.createElement('tr');
     linha.innerHTML = `
-      <td>${pedido.id}</td>
+      <td>#${pedido.id}</td>
       <td>${esc(pedido.cliente_nome)}</td>
       <td>${esc(pedido.telefone)}</td>
       <td>${esc(descricaoItens)}</td>
       <td>${esc(pedido.total_reais)}</td>
       <td>
         <select class="status" data-id="${pedido.id}">
-          ${STATUS_DISPONIVEIS.map((s) => `<option value="${s}" ${s === pedido.status ? 'selected' : ''}>${s}</option>`).join('')}
+          ${Object.entries(STATUS_PEDIDO).map(([valor, rotulo]) => `<option value="${valor}" ${valor === pedido.status ? 'selected' : ''}>${rotulo}</option>`).join('')}
         </select>
       </td>
       <td>${esc(pedido.criado_em)}</td>
@@ -150,7 +193,9 @@ async function carregarPedidos() {
   });
 
   corpo.querySelectorAll('.status').forEach((select) => {
+    colorirStatus(select);
     select.addEventListener('change', async () => {
+      colorirStatus(select);
       await chamarApi(`/api/pedidos/${select.dataset.id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: select.value })
@@ -171,6 +216,12 @@ const STATUS_SERVICO = {
 async function carregarServicos() {
   const servicos = await chamarApi('/api/servicos');
   const corpo = document.querySelector('#tabela-servicos tbody');
+
+  if (servicos.length === 0) {
+    corpo.innerHTML = linhaVazia(8, 'Nenhuma solicitação de manutenção ainda. Elas aparecem aqui quando o cliente pedir pelo WhatsApp.');
+    return;
+  }
+
   corpo.innerHTML = '';
   servicos.forEach((servico) => {
     const linha = document.createElement('tr');
@@ -192,7 +243,9 @@ async function carregarServicos() {
   });
 
   corpo.querySelectorAll('.status-servico').forEach((select) => {
+    colorirStatus(select);
     select.addEventListener('change', async () => {
+      colorirStatus(select);
       await chamarApi(`/api/servicos/${select.dataset.id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: select.value })
@@ -219,6 +272,7 @@ async function carregarConfig() {
     if (form.elements[campo]) form.elements[campo].value = config[campo] || '';
   });
   aplicarRotuloCatalogo(config.rotulo_catalogo);
+  aplicarNomeEstabelecimento(config.nome);
 }
 
 // O nome dessa seção é configurável (ex: "Cardápio" para um salão, "Loja de Acessórios" para uma
@@ -229,11 +283,17 @@ function aplicarRotuloCatalogo(rotulo) {
   document.getElementById('titulo-cardapio').textContent = rotulo;
 }
 
+function aplicarNomeEstabelecimento(nome) {
+  if (!nome) return;
+  document.getElementById('nome-estabelecimento-header').textContent = nome;
+}
+
 document.getElementById('form-config').addEventListener('submit', async (evento) => {
   evento.preventDefault();
   const dados = Object.fromEntries(new FormData(evento.target).entries());
   const atualizado = await chamarApi('/api/config', { method: 'PUT', body: JSON.stringify(dados) });
   aplicarRotuloCatalogo(atualizado.rotulo_catalogo);
+  aplicarNomeEstabelecimento(atualizado.nome);
   const aviso = document.getElementById('config-salvo');
   aviso.classList.remove('oculto');
   setTimeout(() => aviso.classList.add('oculto'), 2000);
