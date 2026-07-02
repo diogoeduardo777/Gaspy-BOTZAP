@@ -17,7 +17,7 @@ do WhatsApp Web, sem custo por conversa), SQLite (banco embutido, sem servidor) 
 - Os dados (cardápio/produtos, configurações, pedidos, serviços agendados com protocolo, sessões de
   conversa, logs) ficam em `data/gaspy.db` (SQLite).
 - Na primeira execução, se o banco estiver vazio, o sistema semeia automaticamente um
-  estabelecimento de exemplo a partir de `clients/exemplo.json`.
+  estabelecimento a partir de `clients/<CLIENT_ID>.json` (padrão: `clients/teccell.json`).
 
 ## Instalação
 
@@ -103,16 +103,21 @@ um aparelho).
 Acesse `http://localhost:3000`, informe a `PAINEL_SENHA` e ajuste na aba **Configurações**:
 - Número do atendente, horário de atendimento, chave PIX (+ nome do recebedor e cidade).
 
-Na aba **Cardápio**, cadastre os acessórios da loja de vendas (capinhas, carregadores, fones...),
-com preço e, se quiser controlar quantidade, o campo **Estoque** — deixe em branco para não
-controlar estoque daquele item. Itens com estoque `0` somem automaticamente da lista que o cliente
-vê no WhatsApp.
+Na aba **🍽️ Loja de Acessórios**, cadastre os acessórios da loja de vendas (capinhas, carregadores,
+fones...), com preço e, se quiser controlar quantidade, o campo **Estoque** — deixe em branco para
+não controlar estoque daquele item. Itens com estoque `0` somem automaticamente da lista que o
+cliente vê no WhatsApp.
 
-Teste no WhatsApp da loja: mande "oi", escolha **1** (Solicitar manutenção) e siga o fluxo — ele vai
-gerar um protocolo (ex: `#0001`). Depois escolha **2** (Consultar status) e informe o protocolo ou
-o nome para ver o status atual. Na aba **Serviços** do painel, você consegue mudar o status
-(Em análise → Em manutenção → Aguardando peça → Concluído) e definir uma previsão de entrega — a
-próxima consulta do cliente já reflete a mudança.
+Na aba **🧰 Cadastro de Serviços**, já vêm 6 serviços de exemplo (Diagnóstico, Troca de tela, Troca
+de bateria, Formatação, Upgrade de SSD, Limpeza interna) com preços de referência — edite os preços
+reais ou adicione/remova serviços. É essa lista que o cliente vê ao escolher "Solicitar manutenção".
+
+Teste no WhatsApp da loja: mande "oi", escolha **1** (Solicitar manutenção) e siga o fluxo — ele
+mostra a lista de serviços cadastrados com preço e gera um protocolo (ex: `#0001`). Depois escolha
+**2** (Consultar status) e informe o protocolo ou o nome para ver o status atual. Na aba
+**📋 Pedidos e Agendamentos** do painel, você consegue mudar o status (Em análise → Em manutenção →
+Aguardando peça → Concluído) e definir uma previsão de entrega — a próxima consulta do cliente já
+reflete a mudança.
 
 ### 7. Deixar rodando 24h
 
@@ -122,19 +127,21 @@ energia ou reinício do computador.
 
 ## Usando o painel
 
-- **Cardápio**: adicionar, editar preço/disponibilidade/estoque e excluir itens (serve tanto para
-  cardápio de comida/serviços quanto para produtos de loja). As mudanças valem imediatamente para o
-  bot, sem precisar reiniciar. Itens com estoque `0` somem da lista que o cliente vê. O **nome
-  dessa seção é personalizável por estabelecimento** — configure em Configurações → "Nome da seção
-  de itens" (ex: `🍽️ Cardápio` para um restaurante/salão, `🛍️ Loja de Acessórios` para uma
-  assistência técnica, `📦 Produtos` para qualquer outro tipo de loja). O texto escolhido aparece
-  tanto na aba do painel quanto nas mensagens que o cliente recebe no WhatsApp.
-- **Pedidos**: ver todos os pedidos recebidos (cardápio ou agendamento) e marcar como
-  `pago`/`concluido`/`cancelado` conforme o pagamento é confirmado manualmente.
-- **Serviços**: para fluxos de manutenção/assistência técnica — ver todas as solicitações com
-  protocolo, cliente, aparelho e serviço, e atualizar o status (`Em análise` → `Em manutenção` →
-  `Aguardando peça` → `Concluído`) e a previsão de entrega. O cliente vê a mudança na próxima vez
-  que consultar o status pelo WhatsApp.
+- **Produtos/Acessórios** (aba com nome personalizável): adicionar, editar preço/disponibilidade/
+  estoque e excluir itens à venda. As mudanças valem imediatamente para o bot, sem precisar
+  reiniciar. Itens com estoque `0` somem da lista que o cliente vê. O **nome dessa seção é
+  personalizável por estabelecimento** — configure em Configurações → "Nome da seção de itens" (ex:
+  `🍽️ Cardápio` para um restaurante/salão, `🛍️ Loja de Acessórios` para uma assistência técnica,
+  `📦 Produtos` para qualquer outro tipo de loja). O texto escolhido aparece tanto na aba do painel
+  quanto nas mensagens que o cliente recebe no WhatsApp.
+- **🧰 Cadastro de Serviços**: os tipos de serviço que o estabelecimento oferece (ex: troca de tela,
+  formatação), cada um com nome, descrição opcional e preço opcional. É essa lista que aparece para
+  o cliente escolher ao "Solicitar manutenção" pelo WhatsApp.
+- **📋 Pedidos e Agendamentos**: uma lista só, mais recente primeiro, com tudo que os clientes
+  pediram pelo WhatsApp — compras de produtos e solicitações de manutenção — cada linha marcada como
+  🛍️ Produto ou 🔧 Serviço. Atualize o status conforme o andamento
+  (produtos: `Pendente`/`Pago`/`Cancelado`/`Concluído`; serviços: `Em análise`/`Em manutenção`/
+  `Aguardando peça`/`Concluído`) — o cliente vê a mudança na próxima consulta pelo WhatsApp.
 - **Configurações**: dados do estabelecimento, chave PIX (e nome/cidade do recebedor, exigidos
   pelo padrão do PIX Copia e Cola) e o plano (`basico` ou `profissional`).
 
@@ -187,8 +194,8 @@ src/ai/                     # atendimento com IA do Plano Profissional (Groq)
 src/pix/                    # geração do PIX Copia e Cola (BR Code)
 src/database/               # conexão SQLite, schema e repositórios
 painel/                     # painel web (Express + HTML/CSS/JS puro)
-clients/exemplo.json        # dado inicial (salão) usado só no primeiro seed do banco
-clients/teccell.json        # dado inicial (assistência técnica) usado só no primeiro seed do banco
+clients/exemplo.json        # modelo (salão/comida) — não é mais o padrão, fica de referência
+clients/teccell.json        # dado inicial padrão (assistência técnica), usado no primeiro seed
 data/gaspy.db               # banco SQLite (criado automaticamente)
 ```
 
@@ -202,7 +209,8 @@ data/gaspy.db               # banco SQLite (criado automaticamente)
 ## Expansão para múltiplos estabelecimentos (multi-tenant)
 
 A base já está pronta para isso: todas as tabelas (`cardapio_itens`, `pedidos`,
-`servicos_agendados`, `sessoes`, `mensagens_log`) são segmentadas por `estabelecimento_id`. Para
+`servicos_agendados`, `servicos_catalogo`, `sessoes`, `mensagens_log`) são segmentadas por
+`estabelecimento_id`. Para
 atender mais de um estabelecimento, hoje é necessário rodar um processo Node por estabelecimento
 (cada `whatsapp-web.js` só controla um número de WhatsApp), cada um com seu próprio `CLIENT_ID` e
 `SESSION_PATH` no `.env`. Um painel central único e um "gerenciador" de múltiplos processos ficam
@@ -213,11 +221,14 @@ como próxima evolução natural.
 Cada estabelecimento tem um arquivo `clients/<client_id>.json` (ex: `clients/teccell.json`) usado
 **apenas na primeira execução**, para semear o banco daquela instalação. Para uma nova loja:
 
-1. Copie um dos arquivos existentes (`clients/exemplo.json` para fluxo de menu com agendamento,
-   `clients/teccell.json` para fluxo de manutenção com protocolo) como `clients/<novo_id>.json`.
+1. Copie um dos arquivos existentes (`clients/exemplo.json` para fluxo de menu com agendamento tipo
+   salão, `clients/teccell.json` para fluxo de manutenção com protocolo tipo assistência técnica)
+   como `clients/<novo_id>.json`.
 2. Ajuste `nome_empresa`, `saudacao`, `menu_principal` (as ações disponíveis são: `mensagem`,
-   `submenu`, `coletar_dados`, `cardapio`, `manutencao`, `consultar_status` e `transferir`) e o
-   `rotulo_catalogo` (o nome que a seção de itens vai ter para esse tipo de negócio).
+   `submenu`, `coletar_dados`, `cardapio`, `manutencao`, `consultar_status` e `transferir`), o
+   `rotulo_catalogo` (o nome que a seção de produtos vai ter para esse tipo de negócio) e, se for
+   usar o fluxo de manutenção, o array `servicos_catalogo` (lista de `{ nome, descricao, preco }`
+   com os tipos de serviço já cadastrados de cara).
 3. No `.env` daquela instalação, defina `CLIENT_ID=<novo_id>`.
-4. Rode `npm start` — o restante (chave PIX, produtos/cardápio, horários) é configurado depois
+4. Rode `npm start` — o restante (chave PIX, produtos, serviços, horários) é configurado depois
    direto pelo painel, sem precisar editar o JSON de novo.

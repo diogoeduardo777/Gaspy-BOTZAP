@@ -30,8 +30,8 @@
     </div>
     <nav>
       <button class="aba-btn ativo" data-aba="cardapio" id="btn-aba-cardapio">🍽️ Cardápio</button>
-      <button class="aba-btn" data-aba="pedidos">🧾 Pedidos</button>
-      <button class="aba-btn" data-aba="servicos">🔧 Serviços</button>
+      <button class="aba-btn" data-aba="servicos-catalogo">🧰 Cadastro de Serviços</button>
+      <button class="aba-btn" data-aba="atendimentos">📋 Pedidos e Agendamentos</button>
       <button class="aba-btn" data-aba="config">⚙️ Configurações</button>
     </nav>
     <button id="btn-sair" class="botao-sair">Sair</button>
@@ -81,30 +81,50 @@
       </div>
     </section>
 
-    <section id="aba-pedidos" class="aba oculto">
+    <section id="aba-servicos-catalogo" class="aba oculto">
       <div class="aba-cabecalho">
-        <h2>🧾 Pedidos</h2>
-        <p class="ajuda">Acompanhe as compras feitas pelo WhatsApp. Assim que o cliente pagar via PIX, marque o pedido como "pago".</p>
+        <h2>🧰 Cadastro de Serviços</h2>
+        <p class="ajuda">Tipos de serviço que sua assistência técnica oferece (ex: troca de tela, formatação). O cliente escolhe um deles ao pedir manutenção pelo WhatsApp.</p>
       </div>
+
+      <div class="painel-novo-item">
+        <p class="rotulo-form">➕ Adicionar novo serviço</p>
+        <form id="form-novo-servico" class="form-linha">
+          <div class="campo-flutuante">
+            <label for="campo-servico-nome">Nome do serviço</label>
+            <input id="campo-servico-nome" type="text" name="nome" placeholder="Ex: Troca de tela" required>
+          </div>
+          <div class="campo-flutuante">
+            <label for="campo-servico-descricao">Descrição (opcional)</label>
+            <input id="campo-servico-descricao" type="text" name="descricao" placeholder="Detalhes do serviço">
+          </div>
+          <div class="campo-flutuante">
+            <label for="campo-servico-preco">Preço (R$)</label>
+            <input id="campo-servico-preco" type="number" name="preco" placeholder="Sem valor fixo" step="0.01" min="0">
+          </div>
+          <button type="submit" class="botao-primario">+ Adicionar</button>
+        </form>
+      </div>
+
       <div class="tabela-wrap">
-        <table id="tabela-pedidos">
+        <table id="tabela-servicos-catalogo">
           <thead>
-            <tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Itens</th><th>Total (R$)</th><th>Status</th><th>Data</th></tr>
+            <tr><th>Nome</th><th>Descrição</th><th>Preço (R$)</th><th>Disponível</th><th></th></tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
     </section>
 
-    <section id="aba-servicos" class="aba oculto">
+    <section id="aba-atendimentos" class="aba oculto">
       <div class="aba-cabecalho">
-        <h2>🔧 Serviços agendados</h2>
-        <p class="ajuda">Solicitações de manutenção recebidas pelo WhatsApp. Atualize o status para que o cliente veja a novidade ao consultar o protocolo.</p>
+        <h2>📋 Pedidos e Agendamentos</h2>
+        <p class="ajuda">Tudo que os clientes pediram pelo WhatsApp — compras da loja e solicitações de manutenção — numa lista só, da mais recente para a mais antiga.</p>
       </div>
       <div class="tabela-wrap">
-        <table id="tabela-servicos">
+        <table id="tabela-atendimentos">
           <thead>
-            <tr><th>Protocolo</th><th>Cliente</th><th>Telefone</th><th>Aparelho</th><th>Serviço</th><th>Status</th><th>Previsão</th><th>Início</th></tr>
+            <tr><th>Tipo</th><th>#</th><th>Cliente</th><th>Telefone</th><th>Descrição</th><th>Valor (R$)</th><th>Status</th><th>Data</th></tr>
           </thead>
           <tbody></tbody>
         </table>

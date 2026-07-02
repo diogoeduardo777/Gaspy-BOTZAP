@@ -25,6 +25,11 @@ if (!colunasEstabelecimentos.includes('rotulo_catalogo')) {
   db.exec("ALTER TABLE estabelecimentos ADD COLUMN rotulo_catalogo TEXT NOT NULL DEFAULT '🍽️ Cardápio'");
 }
 
+const colunasServicosAgendados = db.prepare("PRAGMA table_info(servicos_agendados)").all().map((c) => c.name);
+if (!colunasServicosAgendados.includes('preco_centavos')) {
+  db.exec('ALTER TABLE servicos_agendados ADD COLUMN preco_centavos INTEGER');
+}
+
 const totalEstabelecimentos = db.prepare('SELECT COUNT(*) AS total FROM estabelecimentos').get().total;
 if (totalEstabelecimentos === 0) {
   const { rodarSeed } = require('./seed');

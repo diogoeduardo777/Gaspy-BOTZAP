@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS servicos_agendados (
   cliente_nome TEXT NOT NULL DEFAULT '',
   aparelho TEXT NOT NULL DEFAULT '',
   servico TEXT NOT NULL DEFAULT '',
+  preco_centavos INTEGER, -- NULL = sem valor fixo definido (depende de diagnóstico)
   status TEXT NOT NULL DEFAULT 'em_analise' CHECK (status IN ('em_analise', 'em_manutencao', 'aguardando_peca', 'concluido')),
   data_inicio TEXT NOT NULL DEFAULT (datetime('now')),
   data_prevista TEXT,
@@ -64,6 +65,18 @@ CREATE TABLE IF NOT EXISTS servicos_agendados (
 );
 
 CREATE INDEX IF NOT EXISTS idx_servicos_estabelecimento ON servicos_agendados(estabelecimento_id);
+
+CREATE TABLE IF NOT EXISTS servicos_catalogo (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  estabelecimento_id INTEGER NOT NULL REFERENCES estabelecimentos(id),
+  nome TEXT NOT NULL,
+  descricao TEXT NOT NULL DEFAULT '',
+  preco_centavos INTEGER, -- NULL = sem preço fixo (mostrado sem valor ao cliente)
+  disponivel INTEGER NOT NULL DEFAULT 1,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_servicos_catalogo_estabelecimento ON servicos_catalogo(estabelecimento_id);
 
 CREATE TABLE IF NOT EXISTS sessoes (
   telefone TEXT PRIMARY KEY,

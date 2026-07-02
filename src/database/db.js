@@ -4,7 +4,7 @@ const estabelecimentoRepo = require('./estabelecimentoRepo');
 const pedidosRepo = require('./pedidosRepo');
 
 function estabelecimentoAtual() {
-  const clientId = process.env.CLIENT_ID || 'exemplo';
+  const clientId = process.env.CLIENT_ID || 'teccell';
   const config = estabelecimentoRepo.buscarPorClientId(clientId);
   if (!config) throw new Error(`Estabelecimento com client_id="${clientId}" não encontrado no banco.`);
   return config;

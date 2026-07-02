@@ -3,6 +3,7 @@
 const servicosRepo = require('../database/servicosRepo');
 const sessoesRepo = require('../database/sessoesRepo');
 const { formatarProtocolo } = require('./manutencaoFlow');
+const { formatarPreco } = require('../utils/formatador');
 
 const MENSAGENS_STATUS = {
   em_analise: 'Sua solicitação está em análise.',
@@ -39,12 +40,15 @@ function processarConsulta(telefone, texto, config) {
 
 function montarMensagemStatus(registro) {
   const mensagem = MENSAGENS_STATUS[registro.status] || registro.status;
-  return (
+  let texto =
     `🔖 *Protocolo:* ${formatarProtocolo(registro.id)}\n` +
     `📱 *Aparelho:* ${registro.aparelho}\n` +
-    `🔧 *Serviço:* ${registro.servico}\n` +
-    `📋 *Status:* ${mensagem}`
-  );
+    `🔧 *Serviço:* ${registro.servico}\n`;
+  if (registro.preco_centavos !== null && registro.preco_centavos !== undefined) {
+    texto += `💰 *Valor estimado:* ${formatarPreco(registro.preco_centavos)}\n`;
+  }
+  texto += `📋 *Status:* ${mensagem}`;
+  return texto;
 }
 
 module.exports = { iniciarConsultaStatus, processarConsulta };

@@ -6,6 +6,14 @@
   "mensagem_encerramento": "Obrigado pelo contato! Até logo 😊",
   "mensagem_fora_horario": "Olá! Nosso atendimento é de Seg a Sex das 9h às 18h e Sáb das 9h às 13h. Deixe sua mensagem e retornaremos em breve!",
   "rotulo_catalogo": "🛍️ Loja de Acessórios",
+  "servicos_catalogo": [
+    { "nome": "Diagnóstico", "descricao": "Avaliação inicial do problema", "preco": 30 },
+    { "nome": "Troca de tela", "descricao": "", "preco": 150 },
+    { "nome": "Troca de bateria", "descricao": "", "preco": 80 },
+    { "nome": "Formatação", "descricao": "", "preco": 60 },
+    { "nome": "Upgrade de SSD", "descricao": "Não inclui o valor da peça", "preco": 120 },
+    { "nome": "Limpeza interna", "descricao": "", "preco": 50 }
+  ],
   "menu_principal": {
     "titulo": "Escolha uma opção:",
     "opcoes": [

@@ -6,6 +6,7 @@ const estabelecimentoRepo = require('../src/database/estabelecimentoRepo');
 const cardapioRepo = require('../src/database/cardapioRepo');
 const pedidosRepo = require('../src/database/pedidosRepo');
 const servicosRepo = require('../src/database/servicosRepo');
+const servicosCatalogoRepo = require('../src/database/servicosCatalogoRepo');
 const { formatarProtocolo } = require('../src/flows/manutencaoFlow');
 
 const PAINEL_SENHA = process.env.PAINEL_SENHA;
@@ -14,7 +15,7 @@ if (!PAINEL_SENHA) {
 }
 
 function clientIdAtual() {
-  return process.env.CLIENT_ID || 'exemplo';
+  return process.env.CLIENT_ID || 'teccell';
 }
 
 function estabelecimentoAtual() {
@@ -138,6 +139,79 @@ function criarApp() {
     res.json(paraServicoApi(servico));
   });
 
+  app.get('/api/servicos-catalogo', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    res.json(servicosCatalogoRepo.listarServicos(config.id).map(paraItemApi));
+  });
+
+  app.post('/api/servicos-catalogo', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    const { nome, descricao, preco, disponivel } = req.body || {};
+    if (!nome) return res.status(400).json({ erro: 'Nome do serviço é obrigatório.' });
+
+    const servico = servicosCatalogoRepo.criarServico(config.id, {
+      nome,
+      descricao,
+      precoCentavos: preco === '' || preco === undefined ? null : paraCentavos(preco),
+      disponivel
+    });
+    res.status(201).json(paraItemApi(servico));
+  });
+
+  app.put('/api/servicos-catalogo/:servicoId', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    const { nome, descricao, preco, disponivel } = req.body || {};
+    try {
+      const servico = servicosCatalogoRepo.atualizarServico(config.id, Number(req.params.servicoId), {
+        nome,
+        descricao,
+        precoCentavos: preco !== undefined ? (preco === '' ? null : paraCentavos(preco)) : undefined,
+        disponivel
+      });
+      res.json(paraItemApi(servico));
+    } catch (err) {
+      res.status(404).json({ erro: err.message });
+    }
+  });
+
+  app.delete('/api/servicos-catalogo/:servicoId', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    servicosCatalogoRepo.removerServico(config.id, Number(req.params.servicoId));
+    res.status(204).end();
+  });
+
+  // Combina pedidos (produtos) e serviços agendados (manutenção) numa única lista cronológica,
+  // para a aba "Pedidos e Agendamentos" do painel.
+  app.get('/api/atendimentos', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+
+    const pedidos = pedidosRepo.listarPedidos(config.id).map((pedido) => ({
+      tipo: 'produto',
+      id: pedido.id,
+      cliente_nome: pedido.cliente_nome,
+      telefone: pedido.telefone,
+      descricao: JSON.parse(pedido.itens_json || '[]').map((i) => `${i.quantidade}x ${i.nome}`).join(', '),
+      valor_reais: (pedido.total_centavos / 100).toFixed(2),
+      status: pedido.status,
+      criado_em: pedido.criado_em
+    }));
+
+    const servicos = servicosRepo.listarServicos(config.id).map((servico) => ({
+      tipo: 'servico',
+      id: servico.id,
+      protocolo: formatarProtocolo(servico.id),
+      cliente_nome: servico.cliente_nome,
+      telefone: servico.telefone,
+      descricao: `${servico.aparelho} — ${servico.servico}`,
+      valor_reais: servico.preco_centavos !== null ? (servico.preco_centavos / 100).toFixed(2) : null,
+      status: servico.status,
+      criado_em: servico.criado_em
+    }));
+
+    const combinado = [...pedidos, ...servicos].sort((a, b) => (a.criado_em < b.criado_em ? 1 : -1));
+    res.json(combinado);
+  });
+
   return app;
 }
 
@@ -167,7 +241,8 @@ function paraCentavos(preco) {
 }
 
 function paraItemApi(item) {
-  return { ...item, preco_reais: (item.preco_centavos / 100).toFixed(2) };
+  const temPreco = item.preco_centavos !== null && item.preco_centavos !== undefined;
+  return { ...item, preco_reais: temPreco ? (item.preco_centavos / 100).toFixed(2) : '' };
 }
 
 function paraServicoApi(servico) {

@@ -4,10 +4,10 @@ const path = require('path');
 // Popula o banco na primeira execução usando o JSON de exemplo como dado inicial.
 // Depois disso, toda edição passa a ser feita pelo painel web (gravada no SQLite).
 function rodarSeed(db) {
-  const clientId = process.env.CLIENT_ID || 'exemplo';
+  const clientId = process.env.CLIENT_ID || 'teccell';
   let configPath = path.resolve(`./clients/${clientId}.json`);
   if (!fs.existsSync(configPath)) {
-    configPath = path.resolve('./clients/exemplo.json');
+    configPath = path.resolve('./clients/teccell.json');
   }
   if (!fs.existsSync(configPath)) {
     console.warn('⚠️  Nenhum arquivo de configuração inicial encontrado em clients/. Pulei o seed.');
@@ -62,7 +62,24 @@ function rodarSeed(db) {
     transacao(itensExtraidos);
   }
 
-  console.log(`🌱 Seed inicial criado para o estabelecimento "${config.nome_empresa}" (client_id=${clientId}), ${itensExtraidos.length} itens de cardápio importados.`);
+  const servicosCatalogo = Array.isArray(config.servicos_catalogo) ? config.servicos_catalogo : [];
+  if (servicosCatalogo.length > 0) {
+    const inserirServico = db.prepare(`
+      INSERT INTO servicos_catalogo (estabelecimento_id, nome, descricao, preco_centavos, disponivel)
+      VALUES (?, ?, ?, ?, 1)
+    `);
+    const transacaoServicos = db.transaction((servicos) => {
+      servicos.forEach((servico) => inserirServico.run(
+        estabelecimentoId,
+        servico.nome,
+        servico.descricao || '',
+        servico.preco === undefined || servico.preco === null ? null : Math.round(servico.preco * 100)
+      ));
+    });
+    transacaoServicos(servicosCatalogo);
+  }
+
+  console.log(`🌱 Seed inicial criado para o estabelecimento "${config.nome_empresa}" (client_id=${clientId}), ${itensExtraidos.length} itens de cardápio e ${servicosCatalogo.length} serviços importados.`);
 }
 
 // Extrai linhas do formato "✂️ *Nome do item* — R$ 60,00" usadas hoje no texto fixo de preços.

@@ -1,10 +1,10 @@
 const db = require('./connection');
 
-function criarServico(estabelecimentoId, { telefone, clienteNome, aparelho, servico }) {
+function criarServico(estabelecimentoId, { telefone, clienteNome, aparelho, servico, precoCentavos }) {
   const info = db.prepare(`
-    INSERT INTO servicos_agendados (estabelecimento_id, telefone, cliente_nome, aparelho, servico)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(estabelecimentoId, telefone, clienteNome, aparelho, servico);
+    INSERT INTO servicos_agendados (estabelecimento_id, telefone, cliente_nome, aparelho, servico, preco_centavos)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(estabelecimentoId, telefone, clienteNome, aparelho, servico, precoCentavos === undefined ? null : precoCentavos);
   return buscarPorId(estabelecimentoId, info.lastInsertRowid);
 }
 

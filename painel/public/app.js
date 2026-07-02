@@ -46,8 +46,8 @@ function mostrarTelaApp() {
   document.getElementById('tela-login').classList.add('oculto');
   document.getElementById('tela-app').classList.remove('oculto');
   carregarCardapio();
-  carregarPedidos();
-  carregarServicos();
+  carregarServicosCatalogo();
+  carregarAtendimentos();
   carregarConfig();
 }
 
@@ -138,12 +138,69 @@ document.getElementById('form-novo-item').addEventListener('submit', async (even
   carregarCardapio();
 });
 
-// ---------- Pedidos ----------
+// ---------- Cadastro de Serviços (tipos de manutenção oferecidos) ----------
+
+async function carregarServicosCatalogo() {
+  const servicos = await chamarApi('/api/servicos-catalogo');
+  const corpo = document.querySelector('#tabela-servicos-catalogo tbody');
+
+  if (servicos.length === 0) {
+    corpo.innerHTML = linhaVazia(5, 'Nenhum serviço cadastrado ainda. Adicione o primeiro logo acima! 👆');
+    return;
+  }
+
+  corpo.innerHTML = '';
+  servicos.forEach((servico) => {
+    const linha = document.createElement('tr');
+    linha.innerHTML = `
+      <td>${esc(servico.nome)}</td>
+      <td>${esc(servico.descricao)}</td>
+      <td>${esc(servico.preco_reais)}</td>
+      <td><input type="checkbox" ${servico.disponivel ? 'checked' : ''} data-id="${servico.id}" class="toggle-servico-disponivel"></td>
+      <td><button class="excluir" data-id="${servico.id}">Excluir</button></td>
+    `;
+    corpo.appendChild(linha);
+  });
+
+  corpo.querySelectorAll('.toggle-servico-disponivel').forEach((checkbox) => {
+    checkbox.addEventListener('change', async () => {
+      await chamarApi(`/api/servicos-catalogo/${checkbox.dataset.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ disponivel: checkbox.checked })
+      });
+    });
+  });
+
+  corpo.querySelectorAll('.excluir').forEach((botao) => {
+    botao.addEventListener('click', async () => {
+      if (!confirm('Excluir este serviço do cadastro?')) return;
+      await chamarApi(`/api/servicos-catalogo/${botao.dataset.id}`, { method: 'DELETE' });
+      carregarServicosCatalogo();
+    });
+  });
+}
+
+document.getElementById('form-novo-servico').addEventListener('submit', async (evento) => {
+  evento.preventDefault();
+  const dados = Object.fromEntries(new FormData(evento.target).entries());
+  await chamarApi('/api/servicos-catalogo', { method: 'POST', body: JSON.stringify(dados) });
+  evento.target.reset();
+  carregarServicosCatalogo();
+});
+
+// ---------- Pedidos e Agendamentos (produtos comprados + manutenções solicitadas) ----------
 
 const STATUS_PEDIDO = {
   pendente: 'Pendente',
   pago: 'Pago',
   cancelado: 'Cancelado',
+  concluido: 'Concluído'
+};
+
+const STATUS_SERVICO = {
+  em_analise: 'Em análise',
+  em_manutencao: 'Em manutenção',
+  aguardando_peca: 'Aguardando peça',
   concluido: 'Concluído'
 };
 
@@ -163,101 +220,47 @@ function colorirStatus(select) {
   select.style.color = cor.cor;
 }
 
-async function carregarPedidos() {
-  const pedidos = await chamarApi('/api/pedidos');
-  const corpo = document.querySelector('#tabela-pedidos tbody');
+async function carregarAtendimentos() {
+  const atendimentos = await chamarApi('/api/atendimentos');
+  const corpo = document.querySelector('#tabela-atendimentos tbody');
 
-  if (pedidos.length === 0) {
-    corpo.innerHTML = linhaVazia(7, 'Nenhum pedido recebido ainda. Assim que um cliente comprar pelo WhatsApp, ele aparece aqui.');
+  if (atendimentos.length === 0) {
+    corpo.innerHTML = linhaVazia(8, 'Nada por aqui ainda. Pedidos de produtos e solicitações de manutenção aparecem nesta lista assim que chegarem pelo WhatsApp.');
     return;
   }
 
   corpo.innerHTML = '';
-  pedidos.forEach((pedido) => {
-    const descricaoItens = pedido.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(', ');
+  atendimentos.forEach((item) => {
+    const ehProduto = item.tipo === 'produto';
+    const mapaStatus = ehProduto ? STATUS_PEDIDO : STATUS_SERVICO;
+    const endpoint = ehProduto ? `/api/pedidos/${item.id}/status` : `/api/servicos/${item.id}/status`;
+    const identificador = ehProduto ? `#${item.id}` : item.protocolo;
+
     const linha = document.createElement('tr');
     linha.innerHTML = `
-      <td>#${pedido.id}</td>
-      <td>${esc(pedido.cliente_nome)}</td>
-      <td>${esc(pedido.telefone)}</td>
-      <td>${esc(descricaoItens)}</td>
-      <td>${esc(pedido.total_reais)}</td>
+      <td>${ehProduto ? '🛍️ Produto' : '🔧 Serviço'}</td>
+      <td>${esc(identificador)}</td>
+      <td>${esc(item.cliente_nome)}</td>
+      <td>${esc(item.telefone)}</td>
+      <td>${esc(item.descricao)}</td>
+      <td>${item.valor_reais === null ? '—' : esc(item.valor_reais)}</td>
       <td>
-        <select class="status" data-id="${pedido.id}">
-          ${Object.entries(STATUS_PEDIDO).map(([valor, rotulo]) => `<option value="${valor}" ${valor === pedido.status ? 'selected' : ''}>${rotulo}</option>`).join('')}
+        <select class="status-atendimento" data-endpoint="${endpoint}">
+          ${Object.entries(mapaStatus).map(([valor, rotulo]) => `<option value="${valor}" ${valor === item.status ? 'selected' : ''}>${rotulo}</option>`).join('')}
         </select>
       </td>
-      <td>${esc(pedido.criado_em)}</td>
+      <td>${esc(item.criado_em)}</td>
     `;
     corpo.appendChild(linha);
   });
 
-  corpo.querySelectorAll('.status').forEach((select) => {
+  corpo.querySelectorAll('.status-atendimento').forEach((select) => {
     colorirStatus(select);
     select.addEventListener('change', async () => {
       colorirStatus(select);
-      await chamarApi(`/api/pedidos/${select.dataset.id}/status`, {
+      await chamarApi(select.dataset.endpoint, {
         method: 'PATCH',
         body: JSON.stringify({ status: select.value })
-      });
-    });
-  });
-}
-
-// ---------- Serviços agendados (manutenção) ----------
-
-const STATUS_SERVICO = {
-  em_analise: 'Em análise',
-  em_manutencao: 'Em manutenção',
-  aguardando_peca: 'Aguardando peça',
-  concluido: 'Concluído'
-};
-
-async function carregarServicos() {
-  const servicos = await chamarApi('/api/servicos');
-  const corpo = document.querySelector('#tabela-servicos tbody');
-
-  if (servicos.length === 0) {
-    corpo.innerHTML = linhaVazia(8, 'Nenhuma solicitação de manutenção ainda. Elas aparecem aqui quando o cliente pedir pelo WhatsApp.');
-    return;
-  }
-
-  corpo.innerHTML = '';
-  servicos.forEach((servico) => {
-    const linha = document.createElement('tr');
-    linha.innerHTML = `
-      <td>${esc(servico.protocolo)}</td>
-      <td>${esc(servico.cliente_nome)}</td>
-      <td>${esc(servico.telefone)}</td>
-      <td>${esc(servico.aparelho)}</td>
-      <td>${esc(servico.servico)}</td>
-      <td>
-        <select class="status-servico" data-id="${servico.id}">
-          ${Object.entries(STATUS_SERVICO).map(([valor, rotulo]) => `<option value="${valor}" ${valor === servico.status ? 'selected' : ''}>${rotulo}</option>`).join('')}
-        </select>
-      </td>
-      <td><input type="date" class="data-prevista" data-id="${servico.id}" value="${servico.data_prevista ? servico.data_prevista.slice(0, 10) : ''}"></td>
-      <td>${esc(servico.data_inicio)}</td>
-    `;
-    corpo.appendChild(linha);
-  });
-
-  corpo.querySelectorAll('.status-servico').forEach((select) => {
-    colorirStatus(select);
-    select.addEventListener('change', async () => {
-      colorirStatus(select);
-      await chamarApi(`/api/servicos/${select.dataset.id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: select.value })
-      });
-    });
-  });
-
-  corpo.querySelectorAll('.data-prevista').forEach((input) => {
-    input.addEventListener('change', async () => {
-      await chamarApi(`/api/servicos/${input.dataset.id}/data-prevista`, {
-        method: 'PATCH',
-        body: JSON.stringify({ dataPrevista: input.value || null })
       });
     });
   });
