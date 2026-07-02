@@ -156,7 +156,8 @@ function paraConfigApi(config) {
     chave_pix: config.chave_pix,
     pix_nome_recebedor: config.pix_nome_recebedor,
     pix_cidade: config.pix_cidade,
-    plano: config.plano
+    plano: config.plano,
+    rotulo_catalogo: config.rotulo_catalogo
   };
 }
 

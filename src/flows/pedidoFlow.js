@@ -14,10 +14,10 @@ function iniciarPedido(telefone, config) {
 function montarMensagemCardapio(config, carrinho) {
   const itens = cardapioRepo.listarItens(config.id, { somenteDisponiveis: true });
   if (itens.length === 0) {
-    return 'No momento não há itens disponíveis para pedido. Digite *menu* para voltar.';
+    return `No momento não há itens disponíveis em ${config.rotulo_catalogo}. Digite *menu* para voltar.`;
   }
 
-  let texto = `🛒 *Cardápio de ${config.nome_empresa}*\n`;
+  let texto = `*${config.rotulo_catalogo} — ${config.nome_empresa}*\n`;
   let categoriaAtual = null;
   itens.forEach((item, index) => {
     if (item.categoria !== categoriaAtual) {

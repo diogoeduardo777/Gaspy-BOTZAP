@@ -5,6 +5,7 @@
   "saudacao": "Olá! Bem-vindo à *TecCell* 🔧📱\nComo posso te ajudar hoje?",
   "mensagem_encerramento": "Obrigado pelo contato! Até logo 😊",
   "mensagem_fora_horario": "Olá! Nosso atendimento é de Seg a Sex das 9h às 18h e Sáb das 9h às 13h. Deixe sua mensagem e retornaremos em breve!",
+  "rotulo_catalogo": "🛍️ Loja de Acessórios",
   "menu_principal": {
     "titulo": "Escolha uma opção:",
     "opcoes": [

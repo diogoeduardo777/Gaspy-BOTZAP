@@ -20,6 +20,11 @@ if (!colunasCardapio.includes('estoque')) {
   db.exec('ALTER TABLE cardapio_itens ADD COLUMN estoque INTEGER');
 }
 
+const colunasEstabelecimentos = db.prepare("PRAGMA table_info(estabelecimentos)").all().map((c) => c.name);
+if (!colunasEstabelecimentos.includes('rotulo_catalogo')) {
+  db.exec("ALTER TABLE estabelecimentos ADD COLUMN rotulo_catalogo TEXT NOT NULL DEFAULT '🍽️ Cardápio'");
+}
+
 const totalEstabelecimentos = db.prepare('SELECT COUNT(*) AS total FROM estabelecimentos').get().total;
 if (totalEstabelecimentos === 0) {
   const { rodarSeed } = require('./seed');

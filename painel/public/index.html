@@ -21,7 +21,7 @@
   <header>
     <h1>🤖 Gaspy BOTZAP — Painel</h1>
     <nav>
-      <button class="aba-btn ativo" data-aba="cardapio">🍽️ Cardápio</button>
+      <button class="aba-btn ativo" data-aba="cardapio" id="btn-aba-cardapio">🍽️ Cardápio</button>
       <button class="aba-btn" data-aba="pedidos">🧾 Pedidos</button>
       <button class="aba-btn" data-aba="servicos">🔧 Serviços</button>
       <button class="aba-btn" data-aba="config">⚙️ Configurações</button>
@@ -30,7 +30,7 @@
 
   <main>
     <section id="aba-cardapio" class="aba">
-      <h2>Cardápio</h2>
+      <h2 id="titulo-cardapio">Cardápio</h2>
       <form id="form-novo-item" class="form-linha">
         <input type="text" name="categoria" placeholder="Categoria" required>
         <input type="text" name="nome" placeholder="Nome do item" required>
@@ -76,6 +76,10 @@
         <label>Horário de atendimento <input type="text" name="horario_atendimento"></label>
         <label>Mensagem fora do horário <textarea name="mensagem_fora_horario" rows="2"></textarea></label>
         <label>Mensagem de encerramento <input type="text" name="mensagem_encerramento"></label>
+        <hr>
+        <label>Nome da seção de itens (aparece no painel e no WhatsApp — ex: "🍽️ Cardápio", "🛍️ Loja de Acessórios", "📦 Produtos")
+          <input type="text" name="rotulo_catalogo">
+        </label>
         <hr>
         <label>Chave PIX <input type="text" name="chave_pix"></label>
         <label>Nome do recebedor (PIX) <input type="text" name="pix_nome_recebedor"></label>

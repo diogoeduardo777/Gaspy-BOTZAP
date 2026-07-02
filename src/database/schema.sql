@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS estabelecimentos (
   pix_nome_recebedor TEXT NOT NULL DEFAULT '',
   pix_cidade TEXT NOT NULL DEFAULT '',
   plano TEXT NOT NULL DEFAULT 'basico' CHECK (plano IN ('basico', 'profissional')),
+  rotulo_catalogo TEXT NOT NULL DEFAULT '🍽️ Cardápio', -- nome exibido no painel e no WhatsApp para a lista de itens (ex: "🛍️ Loja de Acessórios")
   config_menu_json TEXT NOT NULL DEFAULT '{}',
   criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );

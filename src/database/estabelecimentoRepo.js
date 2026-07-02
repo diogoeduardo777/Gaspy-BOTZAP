@@ -28,6 +28,7 @@ function paraConfig(row) {
     pix_nome_recebedor: row.pix_nome_recebedor,
     pix_cidade: row.pix_cidade,
     plano: row.plano,
+    rotulo_catalogo: row.rotulo_catalogo,
     menu_principal: menu.menu_principal || { titulo: 'Escolha uma opção:', opcoes: [] },
     submenus: menu.submenus || {}
   };
@@ -40,7 +41,7 @@ function atualizarConfig(id, dados) {
   const campos = [
     'nome', 'saudacao', 'numero_atendente', 'horario_atendimento',
     'mensagem_fora_horario', 'mensagem_encerramento', 'chave_pix',
-    'pix_nome_recebedor', 'pix_cidade', 'plano'
+    'pix_nome_recebedor', 'pix_cidade', 'plano', 'rotulo_catalogo'
   ];
   const atualizado = { ...atual };
   campos.forEach((campo) => {
@@ -52,7 +53,8 @@ function atualizarConfig(id, dados) {
       nome = @nome, saudacao = @saudacao, numero_atendente = @numero_atendente,
       horario_atendimento = @horario_atendimento, mensagem_fora_horario = @mensagem_fora_horario,
       mensagem_encerramento = @mensagem_encerramento, chave_pix = @chave_pix,
-      pix_nome_recebedor = @pix_nome_recebedor, pix_cidade = @pix_cidade, plano = @plano
+      pix_nome_recebedor = @pix_nome_recebedor, pix_cidade = @pix_cidade, plano = @plano,
+      rotulo_catalogo = @rotulo_catalogo
     WHERE id = @id
   `).run(atualizado);
 

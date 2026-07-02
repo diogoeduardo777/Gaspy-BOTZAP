@@ -124,7 +124,11 @@ energia ou reinício do computador.
 
 - **Cardápio**: adicionar, editar preço/disponibilidade/estoque e excluir itens (serve tanto para
   cardápio de comida/serviços quanto para produtos de loja). As mudanças valem imediatamente para o
-  bot, sem precisar reiniciar. Itens com estoque `0` somem da lista que o cliente vê.
+  bot, sem precisar reiniciar. Itens com estoque `0` somem da lista que o cliente vê. O **nome
+  dessa seção é personalizável por estabelecimento** — configure em Configurações → "Nome da seção
+  de itens" (ex: `🍽️ Cardápio` para um restaurante/salão, `🛍️ Loja de Acessórios` para uma
+  assistência técnica, `📦 Produtos` para qualquer outro tipo de loja). O texto escolhido aparece
+  tanto na aba do painel quanto nas mensagens que o cliente recebe no WhatsApp.
 - **Pedidos**: ver todos os pedidos recebidos (cardápio ou agendamento) e marcar como
   `pago`/`concluido`/`cancelado` conforme o pagamento é confirmado manualmente.
 - **Serviços**: para fluxos de manutenção/assistência técnica — ver todas as solicitações com
@@ -198,7 +202,22 @@ data/gaspy.db               # banco SQLite (criado automaticamente)
 ## Expansão para múltiplos estabelecimentos (multi-tenant)
 
 A base já está pronta para isso: todas as tabelas (`cardapio_itens`, `pedidos`,
-`servicos_agendados`, `sessoes`, `mensagens_log`) são segmentadas por `estabelecimento_id`. Para atender mais de um estabelecimento,
-hoje é necessário rodar um processo Node por estabelecimento (cada `whatsapp-web.js` só controla um
-número de WhatsApp), cada um com seu próprio `CLIENT_ID` e `SESSION_PATH` no `.env`. Um painel
-central único e um "gerenciador" de múltiplos processos ficam como próxima evolução natural.
+`servicos_agendados`, `sessoes`, `mensagens_log`) são segmentadas por `estabelecimento_id`. Para
+atender mais de um estabelecimento, hoje é necessário rodar um processo Node por estabelecimento
+(cada `whatsapp-web.js` só controla um número de WhatsApp), cada um com seu próprio `CLIENT_ID` e
+`SESSION_PATH` no `.env`. Um painel central único e um "gerenciador" de múltiplos processos ficam
+como próxima evolução natural.
+
+### Criando uma nova loja/estabelecimento
+
+Cada estabelecimento tem um arquivo `clients/<client_id>.json` (ex: `clients/teccell.json`) usado
+**apenas na primeira execução**, para semear o banco daquela instalação. Para uma nova loja:
+
+1. Copie um dos arquivos existentes (`clients/exemplo.json` para fluxo de menu com agendamento,
+   `clients/teccell.json` para fluxo de manutenção com protocolo) como `clients/<novo_id>.json`.
+2. Ajuste `nome_empresa`, `saudacao`, `menu_principal` (as ações disponíveis são: `mensagem`,
+   `submenu`, `coletar_dados`, `cardapio`, `manutencao`, `consultar_status` e `transferir`) e o
+   `rotulo_catalogo` (o nome que a seção de itens vai ter para esse tipo de negócio).
+3. No `.env` daquela instalação, defina `CLIENT_ID=<novo_id>`.
+4. Rode `npm start` — o restante (chave PIX, produtos/cardápio, horários) é configurado depois
+   direto pelo painel, sem precisar editar o JSON de novo.

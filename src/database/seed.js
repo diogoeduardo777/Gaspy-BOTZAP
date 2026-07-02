@@ -20,10 +20,10 @@ function rodarSeed(db) {
     INSERT INTO estabelecimentos
       (client_id, nome, saudacao, numero_atendente, horario_atendimento,
        mensagem_fora_horario, mensagem_encerramento, chave_pix,
-       pix_nome_recebedor, pix_cidade, plano, config_menu_json)
+       pix_nome_recebedor, pix_cidade, plano, rotulo_catalogo, config_menu_json)
     VALUES (@client_id, @nome, @saudacao, @numero_atendente, @horario_atendimento,
             @mensagem_fora_horario, @mensagem_encerramento, @chave_pix,
-            @pix_nome_recebedor, @pix_cidade, @plano, @config_menu_json)
+            @pix_nome_recebedor, @pix_cidade, @plano, @rotulo_catalogo, @config_menu_json)
   `);
 
   const info = inserirEstabelecimento.run({
@@ -38,6 +38,7 @@ function rodarSeed(db) {
     pix_nome_recebedor: config.nome_empresa || '',
     pix_cidade: 'SAO PAULO',
     plano: 'basico',
+    rotulo_catalogo: config.rotulo_catalogo || '🍽️ Cardápio',
     config_menu_json: JSON.stringify({
       menu_principal: config.menu_principal || { titulo: 'Escolha uma opção:', opcoes: [] },
       submenus: config.submenus || {}

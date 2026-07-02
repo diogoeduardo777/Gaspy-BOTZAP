@@ -218,12 +218,22 @@ async function carregarConfig() {
   Object.keys(config).forEach((campo) => {
     if (form.elements[campo]) form.elements[campo].value = config[campo] || '';
   });
+  aplicarRotuloCatalogo(config.rotulo_catalogo);
+}
+
+// O nome dessa seção é configurável (ex: "Cardápio" para um salão, "Loja de Acessórios" para uma
+// assistência técnica) — reflete no botão da aba e no título assim que a config é carregada.
+function aplicarRotuloCatalogo(rotulo) {
+  if (!rotulo) return;
+  document.getElementById('btn-aba-cardapio').textContent = rotulo;
+  document.getElementById('titulo-cardapio').textContent = rotulo;
 }
 
 document.getElementById('form-config').addEventListener('submit', async (evento) => {
   evento.preventDefault();
   const dados = Object.fromEntries(new FormData(evento.target).entries());
-  await chamarApi('/api/config', { method: 'PUT', body: JSON.stringify(dados) });
+  const atualizado = await chamarApi('/api/config', { method: 'PUT', body: JSON.stringify(dados) });
+  aplicarRotuloCatalogo(atualizado.rotulo_catalogo);
   const aviso = document.getElementById('config-salvo');
   aviso.classList.remove('oculto');
   setTimeout(() => aviso.classList.add('oculto'), 2000);
