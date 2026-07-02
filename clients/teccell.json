@@ -1,0 +1,35 @@
+{
+  "nome_empresa": "TecCell",
+  "numero_atendente": "5511999999999",
+  "horario_atendimento": "Seg a Sex das 9h às 18h, Sáb das 9h às 13h",
+  "saudacao": "Olá! Bem-vindo à *TecCell* 🔧📱\nComo posso te ajudar hoje?",
+  "mensagem_encerramento": "Obrigado pelo contato! Até logo 😊",
+  "mensagem_fora_horario": "Olá! Nosso atendimento é de Seg a Sex das 9h às 18h e Sáb das 9h às 13h. Deixe sua mensagem e retornaremos em breve!",
+  "menu_principal": {
+    "titulo": "Escolha uma opção:",
+    "opcoes": [
+      {
+        "numero": "1",
+        "label": "🔧 Solicitar manutenção",
+        "acao": "manutencao"
+      },
+      {
+        "numero": "2",
+        "label": "🔍 Consultar status do serviço",
+        "acao": "consultar_status"
+      },
+      {
+        "numero": "3",
+        "label": "🛍️ Loja de acessórios",
+        "acao": "cardapio"
+      },
+      {
+        "numero": "4",
+        "label": "👨‍💻 Falar com atendente",
+        "acao": "transferir",
+        "mensagem": "Aguarde um momento, vou te transferir para nosso atendente! 😊"
+      }
+    ]
+  },
+  "submenus": {}
+}

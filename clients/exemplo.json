@@ -31,6 +31,11 @@
         "label": "👩 Falar com atendente",
         "acao": "transferir",
         "mensagem": "Aguarde um momento, vou te transferir para nossa atendente! 😊"
+      },
+      {
+        "numero": "5",
+        "label": "🛒 Fazer pedido",
+        "acao": "cardapio"
       }
     ]
   },

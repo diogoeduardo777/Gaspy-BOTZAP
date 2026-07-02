@@ -1,0 +1,89 @@
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  margin: 0;
+  background: #f2f4f7;
+  color: #222;
+}
+
+.oculto { display: none !important; }
+
+.tela-login, .card-login {
+  max-width: 360px;
+}
+
+#tela-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-login {
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.card-login input {
+  width: 100%;
+  padding: 10px;
+  margin: 12px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.erro { color: #c0392b; font-size: 0.9em; }
+.sucesso { color: #1e8449; font-weight: bold; }
+
+header {
+  background: #1f2937;
+  color: #fff;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+header h1 { margin: 0; font-size: 1.2em; }
+
+nav { display: flex; gap: 8px; }
+
+.aba-btn {
+  background: transparent;
+  border: 1px solid #4b5563;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.aba-btn.ativo { background: #2563eb; border-color: #2563eb; }
+
+main { padding: 24px; max-width: 1000px; margin: 0 auto; }
+
+.aba { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 0.92em; }
+
+.form-linha { display: flex; gap: 8px; flex-wrap: wrap; }
+.form-linha input { flex: 1; min-width: 120px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+.form-linha button { padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+
+.form-config { display: flex; flex-direction: column; gap: 12px; max-width: 480px; }
+.form-config label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9em; font-weight: 600; }
+.form-config input, .form-config textarea, .form-config select {
+  padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-weight: normal;
+}
+.form-config button {
+  align-self: flex-start; padding: 10px 20px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer;
+}
+
+button.excluir { background: #dc2626; color: #fff; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
+select.status { padding: 4px; }

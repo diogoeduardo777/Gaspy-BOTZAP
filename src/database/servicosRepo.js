@@ -1,0 +1,42 @@
+const db = require('./connection');
+
+function criarServico(estabelecimentoId, { telefone, clienteNome, aparelho, servico }) {
+  const info = db.prepare(`
+    INSERT INTO servicos_agendados (estabelecimento_id, telefone, cliente_nome, aparelho, servico)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(estabelecimentoId, telefone, clienteNome, aparelho, servico);
+  return buscarPorId(estabelecimentoId, info.lastInsertRowid);
+}
+
+function buscarPorId(estabelecimentoId, id) {
+  return db.prepare('SELECT * FROM servicos_agendados WHERE estabelecimento_id = ? AND id = ?').get(estabelecimentoId, id);
+}
+
+function buscarPorNome(estabelecimentoId, nome) {
+  return db.prepare(`
+    SELECT * FROM servicos_agendados WHERE estabelecimento_id = ? AND cliente_nome LIKE ?
+    ORDER BY criado_em DESC
+  `).all(estabelecimentoId, `%${nome}%`);
+}
+
+function listarServicos(estabelecimentoId) {
+  return db.prepare('SELECT * FROM servicos_agendados WHERE estabelecimento_id = ? ORDER BY criado_em DESC').all(estabelecimentoId);
+}
+
+function atualizarStatus(estabelecimentoId, id, status) {
+  const dataConclusao = status === 'concluido' ? "datetime('now')" : 'data_conclusao';
+  db.prepare(`
+    UPDATE servicos_agendados SET status = ?, data_conclusao = ${dataConclusao}
+    WHERE estabelecimento_id = ? AND id = ?
+  `).run(status, estabelecimentoId, id);
+  return buscarPorId(estabelecimentoId, id);
+}
+
+function atualizarDataPrevista(estabelecimentoId, id, dataPrevista) {
+  db.prepare(`
+    UPDATE servicos_agendados SET data_prevista = ? WHERE estabelecimento_id = ? AND id = ?
+  `).run(dataPrevista, estabelecimentoId, id);
+  return buscarPorId(estabelecimentoId, id);
+}
+
+module.exports = { criarServico, buscarPorId, buscarPorNome, listarServicos, atualizarStatus, atualizarDataPrevista };

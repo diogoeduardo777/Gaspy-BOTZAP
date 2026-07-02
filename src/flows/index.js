@@ -1,14 +1,18 @@
-const { obterSessao, salvarSessao, resetarSessao, salvarAgendamento } = require('../database/db');
+const sessoesRepo = require('../database/sessoesRepo');
+const pedidosRepo = require('../database/pedidosRepo');
+const pedidoFlow = require('./pedidoFlow');
+const manutencaoFlow = require('./manutencaoFlow');
+const statusFlow = require('./statusFlow');
 const { montarMenu, extrairOpcao } = require('../utils/formatador');
 
 async function processarMensagem(telefone, texto, config) {
-  const sessao = obterSessao(telefone);
+  const sessao = sessoesRepo.obterSessao(config.id, telefone);
   const opcaoDigitada = extrairOpcao(texto);
 
   // Palavras que reiniciam o atendimento
   const palavrasReinicio = ['menu', 'início', 'inicio', 'oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'hello', 'hi'];
   if (palavrasReinicio.some(p => texto.trim().toLowerCase().startsWith(p))) {
-    resetarSessao(telefone);
+    sessoesRepo.resetarSessao(config.id, telefone);
     return await exibirMenuPrincipal(telefone, config);
   }
 
@@ -25,8 +29,26 @@ async function processarMensagem(telefone, texto, config) {
     case 'aguardando_dados':
       return await processarColeta(telefone, texto, sessao.dados, config);
 
+    case 'pedido_selecionando':
+      return pedidoFlow.processarSelecao(telefone, texto, sessao.dados, config);
+
+    case 'pedido_aguardando_nome':
+      return pedidoFlow.processarNomeEFinalizar(telefone, texto, sessao.dados, config);
+
+    case 'manutencao_nome':
+      return manutencaoFlow.processarNome(telefone, texto, sessao.dados, config);
+
+    case 'manutencao_aparelho':
+      return manutencaoFlow.processarAparelho(telefone, texto, sessao.dados, config);
+
+    case 'manutencao_servico':
+      return manutencaoFlow.processarServicoEFinalizar(telefone, texto, sessao.dados, config);
+
+    case 'consultando_status':
+      return statusFlow.processarConsulta(telefone, texto, config);
+
     default:
-      resetarSessao(telefone);
+      sessoesRepo.resetarSessao(config.id, telefone);
       return await exibirMenuPrincipal(telefone, config);
   }
 }
@@ -37,7 +59,7 @@ async function exibirMenuPrincipal(telefone, config) {
     `${config.saudacao}\n\n${menu.titulo}`,
     menu.opcoes
   );
-  salvarSessao(telefone, 'menu_principal');
+  sessoesRepo.salvarSessao(config.id, telefone, 'menu_principal');
   return texto;
 }
 
@@ -55,7 +77,7 @@ async function processarMenuPrincipal(telefone, opcao, config) {
 async function processarSubmenu(telefone, opcao, nomeSubmenu, config) {
   const submenu = config.submenus[nomeSubmenu];
   if (!submenu) {
-    resetarSessao(telefone);
+    sessoesRepo.resetarSessao(config.id, telefone);
     return await exibirMenuPrincipal(telefone, config);
   }
 
@@ -72,7 +94,7 @@ async function processarSubmenu(telefone, opcao, nomeSubmenu, config) {
 async function executarAcao(telefone, item, config) {
   switch (item.acao) {
     case 'mensagem': {
-      salvarSessao(telefone, 'menu_principal');
+      sessoesRepo.salvarSessao(config.id, telefone, 'menu_principal');
       return `${item.mensagem}\n\n_Digite *menu* para voltar ao início._`;
     }
 
@@ -81,7 +103,7 @@ async function executarAcao(telefone, item, config) {
       if (!submenu) {
         return 'Seção não encontrada. Digite *menu* para voltar.';
       }
-      salvarSessao(telefone, 'submenu', { submenu_atual: item.submenu });
+      sessoesRepo.salvarSessao(config.id, telefone, 'submenu', { submenu_atual: item.submenu });
       return montarMenu(submenu.titulo, submenu.opcoes, submenu.mensagem_fixa);
     }
 
@@ -90,15 +112,27 @@ async function executarAcao(telefone, item, config) {
     }
 
     case 'coletar_dados': {
-      salvarSessao(telefone, 'aguardando_dados', {
+      sessoesRepo.salvarSessao(config.id, telefone, 'aguardando_dados', {
         servico: item.servico,
         submenu_atual: null
       });
       return item.mensagem_coleta;
     }
 
+    case 'cardapio': {
+      return pedidoFlow.iniciarPedido(telefone, config);
+    }
+
+    case 'manutencao': {
+      return manutencaoFlow.iniciarManutencao(telefone, config);
+    }
+
+    case 'consultar_status': {
+      return statusFlow.iniciarConsultaStatus(telefone, config);
+    }
+
     case 'transferir': {
-      resetarSessao(telefone);
+      sessoesRepo.resetarSessao(config.id, telefone);
       return `${item.mensagem}\n\n_Número do atendente: ${config.numero_atendente}_`;
     }
 
@@ -113,8 +147,14 @@ async function processarColeta(telefone, texto, dados, config) {
   const nome = partes[0] ? partes[0].trim() : texto.trim();
   const dataHora = partes[1] ? partes[1].trim() : 'A definir';
 
-  salvarAgendamento(telefone, nome, dados.servico, dataHora);
-  resetarSessao(telefone);
+  pedidosRepo.criarPedido(config.id, {
+    telefone,
+    clienteNome: nome,
+    tipo: 'agendamento',
+    itens: [{ nome: dados.servico, quantidade: 1, precoCentavos: 0, observacao: dataHora }],
+    totalCentavos: 0
+  });
+  sessoesRepo.resetarSessao(config.id, telefone);
 
   return (
     `✅ *Solicitação recebida!*\n\n` +

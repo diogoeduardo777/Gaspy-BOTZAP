@@ -22,4 +22,8 @@ function extrairOpcao(texto) {
   return match ? match[1] : normalizado;
 }
 
-module.exports = { montarMenu, normalizarTexto, extrairOpcao };
+function formatarPreco(precoCentavos) {
+  return `R$ ${(precoCentavos / 100).toFixed(2).replace('.', ',')}`;
+}
+
+module.exports = { montarMenu, normalizarTexto, extrairOpcao, formatarPreco };

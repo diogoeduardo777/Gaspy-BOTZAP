@@ -1,15 +1,16 @@
-const path = require('path');
-const fs = require('fs');
+const estabelecimentoRepo = require('../database/estabelecimentoRepo');
 
+// A configuração agora mora no SQLite (editável em tempo real pelo painel web), em vez de um
+// JSON estático lido só na inicialização. Buscamos a cada chamada para refletir edições do painel
+// sem precisar reiniciar o bot.
 function carregarConfig() {
-  const clientId = process.env.CLIENT_ID || 'default';
-  const configPath = path.resolve(`./clients/${clientId}.json`);
+  const clientId = process.env.CLIENT_ID || 'exemplo';
+  const config = estabelecimentoRepo.buscarPorClientId(clientId);
 
-  if (!fs.existsSync(configPath)) {
-    throw new Error(`Arquivo de configuração não encontrado: ${configPath}`);
+  if (!config) {
+    throw new Error(`Estabelecimento com client_id="${clientId}" não encontrado no banco. Rode "npm run seed" ou configure pelo painel.`);
   }
 
-  const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   return config;
 }
 

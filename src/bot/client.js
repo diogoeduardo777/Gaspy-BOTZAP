@@ -6,20 +6,26 @@ const clientId = process.env.CLIENT_ID || 'default';
 const sessionPath = path.resolve(process.env.SESSION_PATH || './sessions');
 
 function criarCliente() {
+  const puppeteerConfig = {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage'
+    ]
+  };
+  // Por padrão, usa o Chromium que o próprio pacote "puppeteer" baixa na instalação.
+  // Só sobrescreve se PUPPETEER_EXECUTABLE_PATH for definido explicitamente no .env.
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    puppeteerConfig.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
   const client = new Client({
     authStrategy: new LocalAuth({
       clientId: clientId,
       dataPath: sessionPath
     }),
-    puppeteer: {
-      headless: true,
-      executablePath: 'C:\\Users\\Diogo\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage'
-      ]
-    }
+    puppeteer: puppeteerConfig
   });
 
   client.on('qr', (qr) => {

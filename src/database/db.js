@@ -1,59 +1,27 @@
-const fs = require('fs');
-const path = require('path');
+// Compatibilidade com scripts antigos (ex: ver-agendamentos.js) que liam agendamentos
+// diretamente daqui. A lógica real agora mora em estabelecimentoRepo/pedidosRepo (SQLite).
+const estabelecimentoRepo = require('./estabelecimentoRepo');
+const pedidosRepo = require('./pedidosRepo');
 
-const clientId = process.env.CLIENT_ID || 'default';
-const dataDir = path.resolve('./sessions');
-const sessoesPath = path.join(dataDir, `${clientId}_sessoes.json`);
-const agendamentosPath = path.join(dataDir, `${clientId}_agendamentos.json`);
-
-function garantirArquivo(filePath, valorInicial) {
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify(valorInicial, null, 2), 'utf-8');
-  }
-}
-
-function lerJson(filePath) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  } catch {
-    return null;
-  }
-}
-
-function salvarJson(filePath, dados) {
-  fs.writeFileSync(filePath, JSON.stringify(dados, null, 2), 'utf-8');
-}
-
-// Garante que os arquivos existem ao iniciar
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-garantirArquivo(sessoesPath, {});
-garantirArquivo(agendamentosPath, []);
-
-function obterSessao(telefone) {
-  const sessoes = lerJson(sessoesPath) || {};
-  return sessoes[telefone] || { estado: 'inicio', dados: {} };
-}
-
-function salvarSessao(telefone, estado, dados = {}) {
-  const sessoes = lerJson(sessoesPath) || {};
-  sessoes[telefone] = { estado, dados, atualizado_em: Date.now() };
-  salvarJson(sessoesPath, sessoes);
-}
-
-function resetarSessao(telefone) {
-  const sessoes = lerJson(sessoesPath) || {};
-  delete sessoes[telefone];
-  salvarJson(sessoesPath, sessoes);
-}
-
-function salvarAgendamento(telefone, nome, servico, dataHora) {
-  const agendamentos = lerJson(agendamentosPath) || [];
-  agendamentos.push({ id: Date.now(), telefone, nome, servico, dataHora, criado_em: new Date().toISOString() });
-  salvarJson(agendamentosPath, agendamentos);
+function estabelecimentoAtual() {
+  const clientId = process.env.CLIENT_ID || 'exemplo';
+  const config = estabelecimentoRepo.buscarPorClientId(clientId);
+  if (!config) throw new Error(`Estabelecimento com client_id="${clientId}" não encontrado no banco.`);
+  return config;
 }
 
 function listarAgendamentos() {
-  return lerJson(agendamentosPath) || [];
+  const config = estabelecimentoAtual();
+  return pedidosRepo.listarPedidos(config.id).map((pedido) => {
+    const itens = JSON.parse(pedido.itens_json || '[]');
+    return {
+      nome: pedido.cliente_nome,
+      servico: itens.map((i) => i.nome).join(', '),
+      dataHora: itens[0] && itens[0].observacao ? itens[0].observacao : pedido.status,
+      telefone: pedido.telefone,
+      criado_em: pedido.criado_em
+    };
+  });
 }
 
-module.exports = { obterSessao, salvarSessao, resetarSessao, salvarAgendamento, listarAgendamentos };
+module.exports = { listarAgendamentos };
