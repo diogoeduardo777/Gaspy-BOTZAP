@@ -1,0 +1,81 @@
+{
+  "nome_empresa": "Salão da Ana",
+  "numero_atendente": "5511999999999",
+  "horario_atendimento": "Seg a Sex das 9h às 18h",
+  "saudacao": "Olá! Bem-vindo ao *Salão da Ana* 💇‍♀️\nComo posso te ajudar hoje?",
+  "mensagem_encerramento": "Obrigado pelo contato! Até logo 😊",
+  "mensagem_fora_horario": "Olá! Nosso atendimento é de Seg a Sex das 9h às 18h. Deixe sua mensagem e retornaremos em breve!",
+  "menu_principal": {
+    "titulo": "Escolha uma opção:",
+    "opcoes": [
+      {
+        "numero": "1",
+        "label": "📅 Agendar horário",
+        "acao": "submenu",
+        "submenu": "agendamento"
+      },
+      {
+        "numero": "2",
+        "label": "💈 Serviços e preços",
+        "acao": "submenu",
+        "submenu": "servicos"
+      },
+      {
+        "numero": "3",
+        "label": "📍 Endereço e horários",
+        "acao": "mensagem",
+        "mensagem": "📍 *Endereço:* Rua das Flores, 123 - Centro\n🕐 *Horários:* Seg a Sex das 9h às 18h\n📞 *Telefone:* (11) 99999-9999"
+      },
+      {
+        "numero": "4",
+        "label": "👩 Falar com atendente",
+        "acao": "transferir",
+        "mensagem": "Aguarde um momento, vou te transferir para nossa atendente! 😊"
+      }
+    ]
+  },
+  "submenus": {
+    "agendamento": {
+      "titulo": "Qual serviço você deseja agendar?",
+      "opcoes": [
+        {
+          "numero": "1",
+          "label": "✂️ Corte de cabelo",
+          "acao": "coletar_dados",
+          "servico": "Corte de cabelo",
+          "mensagem_coleta": "Ótimo! Para agendar seu *Corte de cabelo*, informe:\n\n1️⃣ Seu *nome completo*\n2️⃣ O *dia e horário* que prefere\n\nEx: *Maria Silva, quinta-feira às 14h*"
+        },
+        {
+          "numero": "2",
+          "label": "💅 Manicure e pedicure",
+          "acao": "coletar_dados",
+          "servico": "Manicure e pedicure",
+          "mensagem_coleta": "Ótimo! Para agendar sua *Manicure e pedicure*, informe:\n\n1️⃣ Seu *nome completo*\n2️⃣ O *dia e horário* que prefere\n\nEx: *Maria Silva, quinta-feira às 14h*"
+        },
+        {
+          "numero": "3",
+          "label": "🎨 Coloração",
+          "acao": "coletar_dados",
+          "servico": "Coloração",
+          "mensagem_coleta": "Ótimo! Para agendar sua *Coloração*, informe:\n\n1️⃣ Seu *nome completo*\n2️⃣ O *dia e horário* que prefere\n\nEx: *Maria Silva, quinta-feira às 14h*"
+        },
+        {
+          "numero": "0",
+          "label": "⬅️ Voltar ao menu",
+          "acao": "menu_principal"
+        }
+      ]
+    },
+    "servicos": {
+      "titulo": "💈 *Nossos serviços e preços:*",
+      "opcoes": [
+        {
+          "numero": "0",
+          "label": "⬅️ Voltar ao menu",
+          "acao": "menu_principal"
+        }
+      ],
+      "mensagem_fixa": "✂️ *Corte feminino* — R$ 60,00\n✂️ *Corte masculino* — R$ 35,00\n💅 *Manicure* — R$ 30,00\n💅 *Pedicure* — R$ 35,00\n🎨 *Coloração completa* — R$ 150,00\n💆 *Escova* — R$ 50,00\n\nPara mais informações, fale com nossa atendente!"
+    }
+  }
+}
