@@ -1,0 +1,16 @@
+services:
+  gaspy-botzap:
+    build: .
+    image: gaspy-botzap:local
+    container_name: gaspy-botzap
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    ports:
+      # Lê PAINEL_PORT do .env (padrão 3000). Se mudar no .env, não precisa editar aqui.
+      - "${PAINEL_PORT:-3000}:${PAINEL_PORT:-3000}"
+    volumes:
+      # Sessão do WhatsApp e banco de dados sobrevivem a reinícios/atualizações do container.
+      - ./sessions:/app/sessions
+      - ./data:/app/data

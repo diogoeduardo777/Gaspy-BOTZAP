@@ -19,7 +19,71 @@ do WhatsApp Web, sem custo por conversa), SQLite (banco embutido, sem servidor) 
 - Na primeira execução, se o banco estiver vazio, o sistema semeia automaticamente um
   estabelecimento a partir de `clients/<CLIENT_ID>.json` (padrão: `clients/teccell.json`).
 
-## Instalação
+## Instalação rápida com Docker (recomendado)
+
+Essa é a forma mais simples de instalar: **não precisa instalar Node.js nem Git**, só o Docker.
+Um único comando baixa o projeto, monta tudo e já deixa rodando.
+
+**O que você precisa ter instalado antes:** [Docker](https://docs.docker.com/get-docker/) (no
+Windows, isso é o "Docker Desktop"). É a única instalação manual necessária — depois disso, todo
+o resto é automático, inclusive para futuras lojas nesse mesmo computador.
+
+### Linux / macOS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/diogoeduardo777/Gaspy-BOTZAP/main/install.sh | bash
+```
+
+### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/diogoeduardo777/Gaspy-BOTZAP/main/install.ps1 | iex
+```
+
+Esses comandos baixam o projeto (sem precisar de Git), criam o `.env` a partir do modelo, e sobem
+o sistema com `docker compose`. Ao final, o terminal mostra a pasta onde o projeto foi instalado e
+os próximos passos.
+
+Se preferir revisar o script antes de rodar (recomendável sempre que for colar um comando de
+instalação de alguém na internet — inclusive o nosso), abra
+[`install.sh`](install.sh) ou [`install.ps1`](install.ps1) e veja o que ele faz: só baixa o
+código-fonte do próprio repositório e chama `docker compose`.
+
+### Depois de instalar
+
+1. Edite o `.env` criado na pasta do projeto — no mínimo, defina uma `PAINEL_SENHA` própria e
+   (se for usar) a `GROQ_API_KEY`. Depois de editar, aplique com:
+   ```
+   docker compose up -d --build
+   ```
+2. Veja o QR Code do WhatsApp:
+   ```
+   docker compose logs -f
+   ```
+   Escaneie com o celular do estabelecimento (Aparelhos conectados → Conectar um aparelho).
+3. Acesse o painel em `http://localhost:3000` (ou na porta que você definiu em `PAINEL_PORT`).
+
+Comandos úteis do dia a dia:
+
+| Ação | Comando |
+|---|---|
+| Ver logs / QR Code | `docker compose logs -f` |
+| Parar | `docker compose stop` |
+| Iniciar de novo | `docker compose start` |
+| Atualizar para uma versão nova do código | `docker compose up -d --build` |
+
+A sessão do WhatsApp e o banco de dados ficam salvos nas pastas `sessions/` e `data/` **fora** do
+container (graças aos volumes do `docker-compose.yml`), então reiniciar ou atualizar o container
+não apaga nada nem pede escanear o QR Code de novo.
+
+> ⚠️ Não testamos o build Docker numa máquina com Docker instalado durante o desenvolvimento desta
+> automação (só revisamos cuidadosamente o `Dockerfile`/`docker-compose.yml`). Rode uma vez num
+> ambiente de teste antes de confiar 100% nela para a loja.
+
+## Instalação manual (sem Docker)
+
+Alternativa para quem já tem Node.js instalado ou quer rodar em modo de desenvolvimento
+(`npm run dev`, com reinício automático ao editar arquivos).
 
 1. Instale as dependências:
    ```
@@ -45,7 +109,15 @@ de novo — desde que a pasta não seja apagada.
 ## Guia rápido: instalar em um novo computador (ex: loja TecCell)
 
 Cada estabelecimento roda seu **próprio processo**, com seu **próprio número de WhatsApp**, no
-computador do próprio estabelecimento. Para colocar a TecCell no ar num computador novo:
+computador do próprio estabelecimento.
+
+**Caminho mais simples:** rode o comando da seção [Instalação rápida com Docker](#instalação-rápida-com-docker-recomendado)
+no computador da loja — ele já baixa o projeto e sobe tudo sozinho, sem precisar instalar Node.js
+ou Git. Só depois disso, ajuste o `.env` (`CLIENT_ID=teccell`, `PAINEL_SENHA`) e rode
+`docker compose up -d --build` de novo para aplicar.
+
+O passo a passo abaixo é a via manual (sem Docker), para quem preferir ou não puder instalar Docker
+no computador da loja:
 
 ### 1. Levar os arquivos do projeto para o computador da loja
 
@@ -121,9 +193,13 @@ reflete a mudança.
 
 ### 7. Deixar rodando 24h
 
-Veja a seção [Deploy](#deploy--por-que-não-uma-paas-gratuita-renderrailwayheroku) mais abaixo — o
-recomendado é usar o [PM2](https://pm2.keymetrics.io/) para reiniciar sozinho em caso de queda de
-energia ou reinício do computador.
+Se instalou via Docker, isso já está resolvido: `restart: unless-stopped` no `docker-compose.yml`
+faz o container voltar sozinho depois de uma queda de energia ou reinício do computador (mesmo que
+o Docker Desktop precise abrir automaticamente ao ligar o Windows, o que ele já faz por padrão).
+
+Se instalou pela via manual (sem Docker), veja a seção
+[Deploy](#deploy--por-que-não-uma-paas-gratuita-renderrailwayheroku) mais abaixo — o recomendado é
+usar o [PM2](https://pm2.keymetrics.io/) para reiniciar sozinho.
 
 ## Usando o painel
 
@@ -172,9 +248,10 @@ O `whatsapp-web.js` depende de duas coisas que planos gratuitos de PaaS normalme
 
 Por isso, para rodar 24 horas de verdade e de graça, a recomendação é:
 
-- **Um computador ou mini-PC próprio, sempre ligado** (a opção realmente gratuita), rodando
-  `npm start` com um gerenciador de processos como [PM2](https://pm2.keymetrics.io/) para reiniciar
-  automaticamente em caso de queda:
+- **Um computador ou mini-PC próprio, sempre ligado** (a opção realmente gratuita). Instalando via
+  [Docker](#instalação-rápida-com-docker-recomendado), o próprio `restart: unless-stopped` do
+  `docker-compose.yml` já cuida de reiniciar sozinho — não precisa de PM2. Se instalar pela via
+  manual (sem Docker), use o [PM2](https://pm2.keymetrics.io/):
   ```
   npm install -g pm2
   pm2 start index.js --name gaspy-botzap
@@ -182,7 +259,8 @@ Por isso, para rodar 24 horas de verdade e de graça, a recomendação é:
   pm2 startup
   ```
 - Alternativa de baixo custo (não gratuita, mas muito barata) se não houver uma máquina disponível:
-  uma VPS simples (ex: ~R$20-30/mês) com disco persistente, rodando da mesma forma com PM2.
+  uma VPS simples (ex: ~R$20-30/mês) com disco persistente, rodando com Docker ou PM2 da mesma
+  forma.
 
 ## Estrutura do projeto
 
@@ -197,6 +275,10 @@ painel/                     # painel web (Express + HTML/CSS/JS puro)
 clients/exemplo.json        # modelo (salão/comida) — não é mais o padrão, fica de referência
 clients/teccell.json        # dado inicial padrão (assistência técnica), usado no primeiro seed
 data/gaspy.db               # banco SQLite (criado automaticamente)
+Dockerfile                  # imagem do bot+painel (build em 2 etapas, Chromium do sistema)
+docker-compose.yml          # sobe o container com volumes persistentes (sessions/, data/)
+.dockerignore               # o que não entra na imagem (node_modules, .env, etc.)
+install.sh / install.ps1    # instalação em um comando (Linux/Mac e Windows), sem Node.js/Git
 ```
 
 ## Scripts
@@ -210,8 +292,7 @@ data/gaspy.db               # banco SQLite (criado automaticamente)
 
 A base já está pronta para isso: todas as tabelas (`cardapio_itens`, `pedidos`,
 `servicos_agendados`, `servicos_catalogo`, `sessoes`, `mensagens_log`) são segmentadas por
-`estabelecimento_id`. Para
-atender mais de um estabelecimento, hoje é necessário rodar um processo Node por estabelecimento
+`estabelecimento_id`. Para atender mais de um estabelecimento, hoje é necessário rodar um processo Node por estabelecimento
 (cada `whatsapp-web.js` só controla um número de WhatsApp), cada um com seu próprio `CLIENT_ID` e
 `SESSION_PATH` no `.env`. Um painel central único e um "gerenciador" de múltiplos processos ficam
 como próxima evolução natural.
