@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS estabelecimentos (
   pix_cidade TEXT NOT NULL DEFAULT '',
   plano TEXT NOT NULL DEFAULT 'basico' CHECK (plano IN ('basico', 'profissional')),
   rotulo_catalogo TEXT NOT NULL DEFAULT '🍽️ Cardápio', -- nome exibido no painel e no WhatsApp para a lista de itens (ex: "🛍️ Loja de Acessórios")
+  painel_senha_hash TEXT, -- hash (salt:hash) da senha do painel, criada no 1º acesso; NULL = ainda não configurada
   config_menu_json TEXT NOT NULL DEFAULT '{}',
   criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );

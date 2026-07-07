@@ -24,6 +24,9 @@ const colunasEstabelecimentos = db.prepare("PRAGMA table_info(estabelecimentos)"
 if (!colunasEstabelecimentos.includes('rotulo_catalogo')) {
   db.exec("ALTER TABLE estabelecimentos ADD COLUMN rotulo_catalogo TEXT NOT NULL DEFAULT '🍽️ Cardápio'");
 }
+if (!colunasEstabelecimentos.includes('painel_senha_hash')) {
+  db.exec('ALTER TABLE estabelecimentos ADD COLUMN painel_senha_hash TEXT');
+}
 
 const colunasServicosAgendados = db.prepare("PRAGMA table_info(servicos_agendados)").all().map((c) => c.name);
 if (!colunasServicosAgendados.includes('preco_centavos')) {

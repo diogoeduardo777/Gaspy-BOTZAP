@@ -61,4 +61,13 @@ function atualizarConfig(id, dados) {
   return buscarPorId(id);
 }
 
-module.exports = { buscarPorClientId, buscarPorId, atualizarConfig };
+function buscarSenhaHash(clientId) {
+  const row = db.prepare('SELECT painel_senha_hash FROM estabelecimentos WHERE client_id = ?').get(clientId);
+  return row ? row.painel_senha_hash : null;
+}
+
+function definirSenhaHash(clientId, hash) {
+  db.prepare('UPDATE estabelecimentos SET painel_senha_hash = ? WHERE client_id = ?').run(hash, clientId);
+}
+
+module.exports = { buscarPorClientId, buscarPorId, atualizarConfig, buscarSenhaHash, definirSenhaHash };

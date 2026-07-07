@@ -1,5 +1,6 @@
 require('dotenv').config();
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 
 const estabelecimentoRepo = require('../src/database/estabelecimentoRepo');
@@ -11,8 +12,10 @@ const { formatarProtocolo } = require('../src/flows/manutencaoFlow');
 const notificador = require('../src/bot/notificador');
 
 const PAINEL_SENHA = process.env.PAINEL_SENHA;
-if (!PAINEL_SENHA) {
-  console.warn('⚠️  PAINEL_SENHA não definida no .env — usando senha padrão "admin". Configure uma senha própria antes de expor o painel na rede.');
+if (PAINEL_SENHA) {
+  console.log('🔑 Painel usando a senha definida em PAINEL_SENHA (.env).');
+} else {
+  console.log('🔑 Painel sem senha no .env — a senha será criada no primeiro acesso pela tela do painel.');
 }
 
 function clientIdAtual() {
@@ -27,19 +30,74 @@ function estabelecimentoAtual() {
   return config;
 }
 
+// Gera "salt:hash" com scrypt (crypto nativo) — não guardamos a senha em texto puro.
+function hashSenha(senha) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(String(senha), salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verificarSenha(senha, armazenado) {
+  if (!armazenado || !armazenado.includes(':')) return false;
+  const [salt, hashEsperado] = armazenado.split(':');
+  const hash = crypto.scryptSync(String(senha), salt, 64).toString('hex');
+  const a = Buffer.from(hash, 'hex');
+  const b = Buffer.from(hashEsperado, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+// Retorna true se o painel ainda não tem senha (nem no .env, nem criada no 1º acesso).
+function precisaConfigurarSenha() {
+  if (PAINEL_SENHA) return false;
+  return !estabelecimentoRepo.buscarSenhaHash(clientIdAtual());
+}
+
 function autenticar(req, res, next) {
-  const senhaEsperada = PAINEL_SENHA || 'admin';
-  const senhaEnviada = req.headers['x-painel-senha'];
-  if (senhaEnviada !== senhaEsperada) {
+  const senhaEnviada = req.headers['x-painel-senha'] || '';
+
+  // Prioridade 1: senha fixa via .env (caminho Docker/servidor).
+  if (PAINEL_SENHA) {
+    if (senhaEnviada === PAINEL_SENHA) return next();
     return res.status(401).json({ erro: 'Senha do painel inválida ou não informada.' });
   }
-  next();
+
+  // Prioridade 2: senha criada no 1º acesso (guardada com hash).
+  const hash = estabelecimentoRepo.buscarSenhaHash(clientIdAtual());
+  if (hash) {
+    if (verificarSenha(senhaEnviada, hash)) return next();
+    return res.status(401).json({ erro: 'Senha do painel inválida ou não informada.' });
+  }
+
+  // Nenhuma senha configurada: bloqueia tudo até o dono criar a senha no assistente.
+  return res.status(401).json({ erro: 'Painel ainda não configurado. Recarregue a página para criar a senha.' });
 }
 
 function criarApp() {
   const app = express();
   app.use(express.json());
   app.use(express.static(path.join(__dirname, 'public')));
+
+  // Assistente de 1º acesso: informa se o painel ainda precisa criar uma senha.
+  app.get('/api/setup-status', (req, res) => {
+    res.json({ precisaConfigurar: precisaConfigurarSenha() });
+  });
+
+  // Cria a senha do painel na primeira vez. Só funciona enquanto não houver senha definida
+  // (nem no .env, nem no banco) — depois disso responde 403.
+  app.post('/api/definir-senha', (req, res) => {
+    if (PAINEL_SENHA) {
+      return res.status(403).json({ erro: 'A senha já está definida pela variável PAINEL_SENHA no .env.' });
+    }
+    if (estabelecimentoRepo.buscarSenhaHash(clientIdAtual())) {
+      return res.status(403).json({ erro: 'A senha do painel já foi configurada.' });
+    }
+    const senha = (req.body && req.body.senha) || '';
+    if (String(senha).length < 4) {
+      return res.status(400).json({ erro: 'A senha precisa ter pelo menos 4 caracteres.' });
+    }
+    estabelecimentoRepo.definirSenhaHash(clientIdAtual(), hashSenha(senha));
+    res.json({ ok: true });
+  });
 
   app.get('/api/config', autenticar, (req, res) => {
     res.json(paraConfigApi(estabelecimentoAtual()));

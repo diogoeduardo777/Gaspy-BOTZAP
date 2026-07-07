@@ -8,11 +8,23 @@
 </head>
 <body>
 
-<div id="tela-login" class="tela">
+<div id="tela-setup" class="tela oculto">
+  <div class="card-login">
+    <span class="emoji-grande">🔐</span>
+    <h1>Bem-vindo! Crie a senha do painel</h1>
+    <p>Este é o primeiro acesso. Defina uma senha para proteger o painel do seu estabelecimento.</p>
+    <input type="password" id="input-nova-senha" placeholder="Crie uma senha (mín. 4 caracteres)">
+    <input type="password" id="input-confirma-senha" placeholder="Repita a senha">
+    <button id="btn-criar-senha" class="botao-primario">Criar senha e entrar</button>
+    <p id="erro-setup" class="erro"></p>
+  </div>
+</div>
+
+<div id="tela-login" class="tela oculto">
   <div class="card-login">
     <span class="emoji-grande">🤖</span>
     <h1>Painel do Estabelecimento</h1>
-    <p>Informe a senha de acesso configurada no arquivo <code>.env</code> (<code>PAINEL_SENHA</code>) para entrar.</p>
+    <p>Informe a senha de acesso do painel para entrar.</p>
     <input type="password" id="input-senha" placeholder="Digite a senha do painel">
     <button id="btn-entrar" class="botao-primario">Entrar</button>
     <p id="erro-login" class="erro"></p>

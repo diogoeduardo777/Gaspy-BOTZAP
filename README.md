@@ -19,10 +19,46 @@ do WhatsApp Web, sem custo por conversa), SQLite (banco embutido, sem servidor) 
 - Na primeira execução, se o banco estiver vazio, o sistema semeia automaticamente um
   estabelecimento a partir de `clients/<CLIENT_ID>.json` (padrão: `clients/teccell.json`).
 
-## Instalação rápida com Docker (recomendado)
+## Formas de instalar (resumo)
 
-Essa é a forma mais simples de instalar: **não precisa instalar Node.js nem Git**, só o Docker.
-Um único comando baixa o projeto, monta tudo e já deixa rodando.
+| Forma | Pré-requisito na máquina da loja | Melhor para |
+|---|---|---|
+| **Pacote portátil (Windows)** | Nada | Loja Windows sem ninguém técnico — descompactar e dar duplo clique |
+| **Docker (1 comando)** | Docker instalado | Quem já tem/topa instalar Docker; Linux, macOS ou Windows |
+| **Manual (npm)** | Node.js instalado | Desenvolvimento e ajustes no código |
+
+Em todas as formas, **a senha do painel é criada no primeiro acesso** (uma tela pede para você
+definir a senha) — não precisa editar arquivo para isso.
+
+## Pacote portátil para Windows (mais simples para a loja)
+
+Aqui a loja **não instala nada** — nem Node.js, nem Docker. Você gera um `.zip` uma vez e envia.
+
+**Você (uma vez, na sua máquina com Node.js):**
+```powershell
+powershell -ExecutionPolicy Bypass -File portatil\empacotar.ps1
+```
+Isso gera `dist\Gaspy-TecCell-portatil.zip` já com o Node embutido, as dependências e o Chromium
+lá dentro.
+
+**A loja:**
+1. Descompacta o `.zip`.
+2. Dá duplo clique em **`iniciar.bat`** (deixa a janela preta aberta).
+3. Escaneia o QR Code que aparece na janela com o WhatsApp da loja.
+4. O navegador abre no painel; no primeiro acesso, cria a senha.
+5. (Opcional) Duplo clique em **`instalar-inicializacao.bat`** para o bot ligar sozinho quando o PC iniciar.
+
+> ⚠️ **Ainda não testado numa máquina Windows limpa** durante o desenvolvimento (os scripts foram
+> escritos e revisados, mas não executados de ponta a ponta aqui). Gere o pacote e teste numa
+> máquina antes de entregar para a loja. Observações: é só para **Windows 64 bits**, o `.zip` fica
+> grande (~200 MB por causa do Chromium), e o Windows pode mostrar um aviso de SmartScreen no
+> `.bat` (basta "Mais informações" → "Executar assim mesmo"). Para atualizar a loja depois, gere um
+> `.zip` novo e substitua — a pasta `data` (dados) pode ser preservada.
+
+## Instalação rápida com Docker (recomendado para quem tem Docker)
+
+Essa é a forma mais simples de instalar via internet: **não precisa instalar Node.js nem Git**, só
+o Docker. Um único comando baixa o projeto, monta tudo e já deixa rodando.
 
 **O que você precisa ter instalado antes:** [Docker](https://docs.docker.com/get-docker/) (no
 Windows, isso é o "Docker Desktop"). É a única instalação manual necessária — depois disso, todo
@@ -51,17 +87,16 @@ código-fonte do próprio repositório e chama `docker compose`.
 
 ### Depois de instalar
 
-1. Edite o `.env` criado na pasta do projeto — no mínimo, defina uma `PAINEL_SENHA` própria e
-   (se for usar) a `GROQ_API_KEY`. Depois de editar, aplique com:
-   ```
-   docker compose up -d --build
-   ```
-2. Veja o QR Code do WhatsApp:
+1. Veja o QR Code do WhatsApp:
    ```
    docker compose logs -f
    ```
    Escaneie com o celular do estabelecimento (Aparelhos conectados → Conectar um aparelho).
-3. Acesse o painel em `http://localhost:3000` (ou na porta que você definiu em `PAINEL_PORT`).
+2. Acesse o painel em `http://localhost:3000` (ou na porta definida em `PAINEL_PORT`). **No primeiro
+   acesso, o painel pede para você criar uma senha** — não precisa editar arquivo. Se preferir fixar
+   a senha por fora (ex: em servidor), defina `PAINEL_SENHA` no `.env` que ela tem prioridade.
+3. Se for usar o Plano Profissional (IA), defina a `GROQ_API_KEY` no `.env` e rode
+   `docker compose up -d --build`.
 
 Comandos úteis do dia a dia:
 
@@ -305,6 +340,7 @@ Dockerfile                  # imagem do bot+painel (build em 2 etapas, Chromium 
 docker-compose.yml          # sobe o container com volumes persistentes (sessions/, data/)
 .dockerignore               # o que não entra na imagem (node_modules, .env, etc.)
 install.sh / install.ps1    # instalação em um comando (Linux/Mac e Windows), sem Node.js/Git
+portatil/                   # gera o pacote portátil Windows (empacotar.ps1) + iniciar.bat e helpers
 ```
 
 ## Scripts

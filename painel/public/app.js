@@ -36,20 +36,55 @@ function linhaVazia(colunas, mensagem) {
   return `<tr class="linha-vazia"><td colspan="${colunas}">${esc(mensagem)}</td></tr>`;
 }
 
+function ocultarTodasAsTelas() {
+  ['tela-setup', 'tela-login', 'tela-app'].forEach((id) => document.getElementById(id).classList.add('oculto'));
+}
+
+function mostrarTelaSetup(mensagemErro) {
+  ocultarTodasAsTelas();
+  document.getElementById('tela-setup').classList.remove('oculto');
+  document.getElementById('erro-setup').textContent = mensagemErro || '';
+}
+
 function mostrarTelaLogin(mensagemErro) {
+  ocultarTodasAsTelas();
   document.getElementById('tela-login').classList.remove('oculto');
-  document.getElementById('tela-app').classList.add('oculto');
   document.getElementById('erro-login').textContent = mensagemErro || '';
 }
 
 function mostrarTelaApp() {
-  document.getElementById('tela-login').classList.add('oculto');
+  ocultarTodasAsTelas();
   document.getElementById('tela-app').classList.remove('oculto');
   carregarCardapio();
   carregarServicosCatalogo();
   carregarAtendimentos();
   carregarConfig();
 }
+
+document.getElementById('btn-criar-senha').addEventListener('click', async () => {
+  const senha = document.getElementById('input-nova-senha').value;
+  const confirma = document.getElementById('input-confirma-senha').value;
+  if (senha.length < 4) {
+    mostrarTelaSetup('A senha precisa ter pelo menos 4 caracteres.');
+    return;
+  }
+  if (senha !== confirma) {
+    mostrarTelaSetup('As senhas não conferem. Digite a mesma senha nos dois campos.');
+    return;
+  }
+  const resposta = await fetch('/api/definir-senha', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ senha })
+  });
+  if (!resposta.ok) {
+    const corpo = await resposta.json().catch(() => ({}));
+    mostrarTelaSetup(corpo.erro || 'Não foi possível criar a senha.');
+    return;
+  }
+  localStorage.setItem(STORAGE_KEY, senha);
+  mostrarTelaApp();
+});
 
 document.getElementById('btn-entrar').addEventListener('click', async () => {
   const senha = document.getElementById('input-senha').value;
@@ -319,8 +354,22 @@ document.getElementById('form-config').addEventListener('submit', async (evento)
 
 // ---------- Inicialização ----------
 
-if (senhaAtual()) {
-  chamarApi('/api/config').then(mostrarTelaApp).catch(() => mostrarTelaLogin());
-} else {
-  mostrarTelaLogin();
+async function inicializar() {
+  try {
+    const status = await fetch('/api/setup-status').then((r) => r.json());
+    if (status.precisaConfigurar) {
+      mostrarTelaSetup();
+      return;
+    }
+  } catch {
+    // Se não conseguir consultar o status, cai para o login normal.
+  }
+
+  if (senhaAtual()) {
+    chamarApi('/api/config').then(mostrarTelaApp).catch(() => mostrarTelaLogin());
+  } else {
+    mostrarTelaLogin();
+  }
 }
+
+inicializar();

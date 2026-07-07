@@ -1,0 +1,35 @@
+====================================================
+  Gaspy BOTZAP - TecCell  (versão portátil)
+====================================================
+
+Este pacote já vem com tudo dentro. Você NÃO precisa instalar Node.js,
+Git nem Docker.
+
+--- COMO USAR ---
+
+1) Dê um duplo clique em "iniciar.bat".
+   - Uma janela preta vai abrir e ficar aberta. NÃO FECHE essa janela
+     enquanto quiser o bot funcionando (fechar = desligar o bot).
+   - Na primeira vez, um QR Code aparece nessa janela.
+
+2) Abra o WhatsApp da loja no celular:
+   Configurações > Aparelhos conectados > Conectar um aparelho
+   e escaneie o QR Code que apareceu na janela.
+
+3) O navegador abre sozinho no painel (http://localhost:3000).
+   No primeiro acesso, crie uma senha para o painel.
+   Depois, cadastre seus produtos, serviços e a chave PIX.
+
+--- LIGAR SOZINHO QUANDO O PC INICIAR (opcional) ---
+
+Dê um duplo clique em "instalar-inicializacao.bat" uma vez.
+A partir daí, o bot inicia sozinho toda vez que o computador ligar.
+Para desfazer: duplo clique em "desinstalar-inicializacao.bat".
+
+--- OBSERVAÇÕES ---
+
+- Este computador precisa ficar ligado para o bot atender.
+- Se o Windows mostrar um aviso azul (SmartScreen) ao abrir o .bat,
+  clique em "Mais informações" > "Executar assim mesmo".
+- Seus dados (pedidos, serviços, cardápio) ficam salvos na pasta "data".
+  Faça uma cópia dessa pasta de vez em quando para não perder nada.
