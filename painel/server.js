@@ -180,6 +180,21 @@ function criarApp() {
     res.json(servicosRepo.listarServicos(config.id).map(paraServicoApi));
   });
 
+  // Retorna uma ordem de serviço completa (usada na tela de OS / impressão).
+  app.get('/api/servicos/:servicoId', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    const servico = servicosRepo.buscarPorId(config.id, Number(req.params.servicoId));
+    if (!servico) return res.status(404).json({ erro: 'Serviço não encontrado.' });
+    res.json(paraServicoApi(servico));
+  });
+
+  app.patch('/api/servicos/:servicoId/laudo', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    const laudo = (req.body && req.body.laudo) || '';
+    const servico = servicosRepo.atualizarLaudo(config.id, Number(req.params.servicoId), String(laudo));
+    res.json(paraServicoApi(servico));
+  });
+
   app.patch('/api/servicos/:servicoId/status', autenticar, (req, res) => {
     const config = estabelecimentoAtual();
     const { status } = req.body || {};
@@ -320,7 +335,12 @@ function paraItemApi(item) {
 }
 
 function paraServicoApi(servico) {
-  return { ...servico, protocolo: formatarProtocolo(servico.id) };
+  const temPreco = servico.preco_centavos !== null && servico.preco_centavos !== undefined;
+  return {
+    ...servico,
+    protocolo: formatarProtocolo(servico.id),
+    preco_reais: temPreco ? (servico.preco_centavos / 100).toFixed(2) : ''
+  };
 }
 
 function iniciarPainel() {

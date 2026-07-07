@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'gaspy_painel_senha';
+let configAtual = null; // guarda a config do estabelecimento (usada na impressão da OS)
 
 function senhaAtual() {
   return localStorage.getItem(STORAGE_KEY) || '';
@@ -276,10 +277,15 @@ async function carregarAtendimentos() {
       ? '<td>—</td>'
       : `<td><input type="checkbox" class="toggle-retirado" data-id="${item.id}" ${item.retirado ? 'checked' : ''}></td>`;
 
+    // Serviços têm ordem de serviço (OS) imprimível — o protocolo vira um botão.
+    const celulaId = ehProduto
+      ? `<td>${esc(identificador)}</td>`
+      : `<td><button class="abrir-os" data-id="${item.id}">${esc(identificador)} 📄</button></td>`;
+
     const linha = document.createElement('tr');
     linha.innerHTML = `
       <td>${ehProduto ? '🛍️ Produto' : '🔧 Serviço'}</td>
-      <td>${esc(identificador)}</td>
+      ${celulaId}
       <td>${esc(item.cliente_nome)}</td>
       <td>${esc(item.telefone)}</td>
       <td>${esc(item.descricao)}</td>
@@ -314,12 +320,119 @@ async function carregarAtendimentos() {
       });
     });
   });
+
+  corpo.querySelectorAll('.abrir-os').forEach((botao) => {
+    botao.addEventListener('click', () => abrirModalOS(botao.dataset.id));
+  });
+}
+
+// ---------- Ordem de Serviço (OS) ----------
+
+const STATUS_SERVICO_ROTULO = {
+  em_analise: 'Em análise',
+  em_manutencao: 'Em manutenção',
+  aguardando_peca: 'Aguardando peça',
+  concluido: 'Concluído'
+};
+
+let osAtual = null; // OS aberta no modal
+
+async function abrirModalOS(id) {
+  const os = await chamarApi(`/api/servicos/${id}`);
+  osAtual = os;
+
+  document.getElementById('os-protocolo').textContent = os.protocolo;
+  document.getElementById('os-cliente').textContent = os.cliente_nome || '';
+  document.getElementById('os-telefone').textContent = os.telefone || '';
+  document.getElementById('os-aparelho').textContent = os.aparelho || '';
+  document.getElementById('os-servico').textContent = os.servico || '';
+  document.getElementById('os-valor').textContent = os.preco_reais ? `R$ ${os.preco_reais}` : 'A combinar';
+  document.getElementById('os-status').textContent = STATUS_SERVICO_ROTULO[os.status] || os.status;
+  document.getElementById('os-data').textContent = os.criado_em || '';
+  document.getElementById('os-problema').value = os.descricao_problema || '';
+  document.getElementById('os-laudo').value = os.laudo_tecnico || '';
+  document.getElementById('laudo-salvo').classList.add('oculto');
+
+  document.getElementById('modal-os').classList.remove('oculto');
+}
+
+function fecharModalOS() {
+  document.getElementById('modal-os').classList.add('oculto');
+  osAtual = null;
+}
+
+document.getElementById('modal-os-fechar').addEventListener('click', fecharModalOS);
+document.getElementById('modal-os').addEventListener('click', (evento) => {
+  if (evento.target.id === 'modal-os') fecharModalOS(); // clicar fora fecha
+});
+
+document.getElementById('btn-salvar-laudo').addEventListener('click', async () => {
+  if (!osAtual) return;
+  const laudo = document.getElementById('os-laudo').value;
+  await chamarApi(`/api/servicos/${osAtual.id}/laudo`, { method: 'PATCH', body: JSON.stringify({ laudo }) });
+  osAtual.laudo_tecnico = laudo;
+  const aviso = document.getElementById('laudo-salvo');
+  aviso.classList.remove('oculto');
+  setTimeout(() => aviso.classList.add('oculto'), 2000);
+});
+
+document.getElementById('btn-imprimir-os').addEventListener('click', () => {
+  if (!osAtual) return;
+  imprimirOS(osAtual, document.getElementById('os-laudo').value);
+});
+
+function imprimirOS(os, laudo) {
+  const nomeLoja = (configAtual && configAtual.nome) || 'Estabelecimento';
+  const valor = os.preco_reais ? `R$ ${os.preco_reais}` : 'A combinar';
+  const html = `
+    <html><head><meta charset="utf-8"><title>OS ${esc(os.protocolo)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; color: #111; padding: 32px; max-width: 720px; margin: 0 auto; }
+      h1 { font-size: 20px; margin: 0; }
+      .topo { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 16px; }
+      .protocolo { font-size: 18px; font-weight: bold; }
+      table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; }
+      td { padding: 6px 4px; vertical-align: top; font-size: 14px; }
+      td.rot { font-weight: bold; width: 130px; }
+      .bloco { border: 1px solid #999; border-radius: 6px; padding: 10px; margin-bottom: 14px; }
+      .bloco h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; color: #444; }
+      .bloco p { margin: 0; white-space: pre-wrap; min-height: 40px; font-size: 14px; }
+      .assinaturas { display: flex; justify-content: space-between; margin-top: 48px; gap: 40px; }
+      .assinaturas div { flex: 1; text-align: center; border-top: 1px solid #111; padding-top: 6px; font-size: 13px; }
+    </style></head><body>
+      <div class="topo">
+        <div><h1>${esc(nomeLoja)}</h1><div>Ordem de Serviço</div></div>
+        <div class="protocolo">${esc(os.protocolo)}</div>
+      </div>
+      <table>
+        <tr><td class="rot">Cliente</td><td>${esc(os.cliente_nome)}</td><td class="rot">Telefone</td><td>${esc(os.telefone)}</td></tr>
+        <tr><td class="rot">Aparelho</td><td>${esc(os.aparelho)}</td><td class="rot">Aberto em</td><td>${esc(os.criado_em)}</td></tr>
+        <tr><td class="rot">Serviço</td><td>${esc(os.servico)}</td><td class="rot">Valor</td><td>${esc(valor)}</td></tr>
+      </table>
+      <div class="bloco"><h3>Problema relatado pelo cliente</h3><p>${esc(os.descricao_problema) || '—'}</p></div>
+      <div class="bloco"><h3>Laudo técnico / serviços executados</h3><p>${esc(laudo) || ''}</p></div>
+      <div class="assinaturas">
+        <div>Assinatura do cliente</div>
+        <div>Responsável técnico</div>
+      </div>
+    </body></html>`;
+
+  const janela = window.open('', '_blank');
+  if (!janela) {
+    alert('Permita pop-ups para imprimir a OS.');
+    return;
+  }
+  janela.document.write(html);
+  janela.document.close();
+  janela.focus();
+  janela.print();
 }
 
 // ---------- Configurações ----------
 
 async function carregarConfig() {
   const config = await chamarApi('/api/config');
+  configAtual = config;
   const form = document.getElementById('form-config');
   Object.keys(config).forEach((campo) => {
     if (form.elements[campo]) form.elements[campo].value = config[campo] || '';

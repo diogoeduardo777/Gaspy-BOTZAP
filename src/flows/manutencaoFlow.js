@@ -23,10 +23,13 @@ function processarAparelho(telefone, texto, dados, config) {
   return montarPerguntaServico(config);
 }
 
+// Rótulo usado quando o cliente não sabe o problema e pede uma análise/diagnóstico.
+const OPCAO_ANALISE = 'Análise / Diagnóstico';
+
 function montarPerguntaServico(config) {
   const servicos = servicosCatalogoRepo.listarServicos(config.id, { somenteDisponiveis: true });
   if (servicos.length === 0) {
-    return 'Qual *serviço* você precisa? (ex: troca de tela, formatação, upgrade de SSD...)';
+    return 'Qual *serviço* você precisa? (ex: troca de tela, formatação, upgrade de SSD...)\n\nSe não souber o que é, escreva *análise* que nossa equipe identifica o problema.';
   }
 
   let texto = 'Qual serviço você precisa?\n\n';
@@ -35,26 +38,51 @@ function montarPerguntaServico(config) {
     if (servico.preco_centavos !== null) texto += ` — ${formatarPreco(servico.preco_centavos)}`;
     texto += '\n';
   });
-  texto += '\nDigite o *número* do serviço, ou descreva se não estiver na lista.';
+  // Opção extra sempre disponível: cliente que não sabe o problema pede uma análise.
+  texto += `${servicos.length + 1} — 🔍 Não sei o problema (fazer uma análise)\n`;
+  texto += '\nDigite o *número* da opção, ou descreva o serviço se não estiver na lista.';
   return texto;
 }
 
-function processarServicoEFinalizar(telefone, texto, dados, config) {
+// Passo 1: registra o serviço escolhido na sessão e pergunta a descrição do problema.
+function processarServico(telefone, texto, dados, config) {
   const entrada = texto.trim();
   const servicosDisponiveis = servicosCatalogoRepo.listarServicos(config.id, { somenteDisponiveis: true });
 
   const indice = parseInt(entrada, 10);
-  const escolhido = !isNaN(indice) ? servicosDisponiveis[indice - 1] : undefined;
+  let nomeServico;
+  let precoCentavos = null;
 
-  const nomeServico = escolhido ? escolhido.nome : entrada;
-  const precoCentavos = escolhido ? escolhido.preco_centavos : null;
+  if (!isNaN(indice) && indice >= 1 && indice <= servicosDisponiveis.length) {
+    const escolhido = servicosDisponiveis[indice - 1];
+    nomeServico = escolhido.nome;
+    precoCentavos = escolhido.preco_centavos;
+  } else if (!isNaN(indice) && indice === servicosDisponiveis.length + 1) {
+    // Última opção da lista = análise/diagnóstico.
+    nomeServico = OPCAO_ANALISE;
+  } else if (/^an[aá]lise$/i.test(entrada)) {
+    nomeServico = OPCAO_ANALISE;
+  } else {
+    // Texto livre: o próprio cliente descreveu o serviço.
+    nomeServico = entrada;
+  }
+
+  sessoesRepo.salvarSessao(config.id, telefone, 'manutencao_descricao', { ...dados, servico: nomeServico, precoCentavos });
+  return 'Por último, *descreva rapidamente o problema* (ex: caiu água, não liga, está lento).\n\nSe preferir, digite *pular*.';
+}
+
+// Passo 2: guarda a descrição do problema e finaliza o registro.
+function processarDescricaoEFinalizar(telefone, texto, dados, config) {
+  const entrada = texto.trim();
+  const descricaoProblema = /^pular$/i.test(entrada) ? '' : entrada;
 
   const registro = servicosRepo.criarServico(config.id, {
     telefone,
     clienteNome: dados.clienteNome,
     aparelho: dados.aparelho,
-    servico: nomeServico,
-    precoCentavos
+    servico: dados.servico,
+    precoCentavos: dados.precoCentavos,
+    descricaoProblema
   });
 
   sessoesRepo.resetarSessao(config.id, telefone);
@@ -65,10 +93,13 @@ function processarServicoEFinalizar(telefone, texto, dados, config) {
     `🔖 *Número de protocolo:* ${protocolo}\n` +
     `👤 *Nome:* ${dados.clienteNome}\n` +
     `📱 *Aparelho:* ${dados.aparelho}\n` +
-    `🔧 *Serviço:* ${nomeServico}\n`;
+    `🔧 *Serviço:* ${dados.servico}\n`;
 
-  if (precoCentavos !== null && precoCentavos !== undefined) {
-    resposta += `💰 *Valor estimado:* ${formatarPreco(precoCentavos)}\n`;
+  if (descricaoProblema) {
+    resposta += `📝 *Problema:* ${descricaoProblema}\n`;
+  }
+  if (dados.precoCentavos !== null && dados.precoCentavos !== undefined) {
+    resposta += `💰 *Valor estimado:* ${formatarPreco(dados.precoCentavos)}\n`;
   }
 
   resposta +=
@@ -82,4 +113,4 @@ function formatarProtocolo(id) {
   return `#${String(id).padStart(4, '0')}`;
 }
 
-module.exports = { iniciarManutencao, processarNome, processarAparelho, processarServicoEFinalizar, formatarProtocolo };
+module.exports = { iniciarManutencao, processarNome, processarAparelho, processarServico, processarDescricaoEFinalizar, formatarProtocolo };

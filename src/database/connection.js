@@ -38,6 +38,12 @@ if (!colunasServicosAgendados.includes('retirado')) {
 if (!colunasServicosAgendados.includes('lembretes_retirada')) {
   db.exec('ALTER TABLE servicos_agendados ADD COLUMN lembretes_retirada INTEGER NOT NULL DEFAULT 0');
 }
+if (!colunasServicosAgendados.includes('descricao_problema')) {
+  db.exec("ALTER TABLE servicos_agendados ADD COLUMN descricao_problema TEXT NOT NULL DEFAULT ''");
+}
+if (!colunasServicosAgendados.includes('laudo_tecnico')) {
+  db.exec("ALTER TABLE servicos_agendados ADD COLUMN laudo_tecnico TEXT NOT NULL DEFAULT ''");
+}
 
 const totalEstabelecimentos = db.prepare('SELECT COUNT(*) AS total FROM estabelecimentos').get().total;
 if (totalEstabelecimentos === 0) {

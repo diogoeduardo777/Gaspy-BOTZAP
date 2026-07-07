@@ -208,6 +208,38 @@
   </main>
 </div>
 
+<!-- Modal da Ordem de Serviço (aberto pelo botão "OS" de cada serviço) -->
+<div id="modal-os" class="modal-overlay oculto">
+  <div class="modal-card">
+    <button id="modal-os-fechar" class="modal-fechar" title="Fechar">✕</button>
+    <h2>📄 Ordem de Serviço <span id="os-protocolo"></span></h2>
+
+    <div class="os-info">
+      <p><strong>Cliente:</strong> <span id="os-cliente"></span></p>
+      <p><strong>Telefone:</strong> <span id="os-telefone"></span></p>
+      <p><strong>Aparelho:</strong> <span id="os-aparelho"></span></p>
+      <p><strong>Serviço:</strong> <span id="os-servico"></span></p>
+      <p><strong>Valor:</strong> <span id="os-valor"></span></p>
+      <p><strong>Status:</strong> <span id="os-status"></span></p>
+      <p><strong>Aberto em:</strong> <span id="os-data"></span></p>
+    </div>
+
+    <label class="os-campo">Problema relatado pelo cliente
+      <textarea id="os-problema" rows="2" readonly></textarea>
+    </label>
+
+    <label class="os-campo">Laudo técnico / serviços executados
+      <textarea id="os-laudo" rows="5" placeholder="Descreva o que foi identificado e o que foi feito..."></textarea>
+    </label>
+
+    <div class="modal-acoes">
+      <button id="btn-salvar-laudo" class="botao-primario">Salvar laudo</button>
+      <button id="btn-imprimir-os" class="botao-secundario">🖨️ Imprimir OS</button>
+      <span id="laudo-salvo" class="sucesso oculto">✅ Laudo salvo!</span>
+    </div>
+  </div>
+</div>
+
 <script src="app.js"></script>
 </body>
 </html>

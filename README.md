@@ -247,7 +247,9 @@ usar o [PM2](https://pm2.keymetrics.io/) para reiniciar sozinho.
   quanto nas mensagens que o cliente recebe no WhatsApp.
 - **🧰 Cadastro de Serviços**: os tipos de serviço que o estabelecimento oferece (ex: troca de tela,
   formatação), cada um com nome, descrição opcional e preço opcional. É essa lista que aparece para
-  o cliente escolher ao "Solicitar manutenção" pelo WhatsApp.
+  o cliente escolher ao "Solicitar manutenção" pelo WhatsApp. Além dos serviços cadastrados, o bot
+  sempre oferece a opção **"Não sei o problema (fazer uma análise)"** e, em seguida, pede ao cliente
+  uma **breve descrição do problema** (ex: "caiu água", "não liga") — que fica registrada no pedido.
 - **📋 Pedidos e Agendamentos**: uma lista só, mais recente primeiro, com tudo que os clientes
   pediram pelo WhatsApp — compras de produtos e solicitações de manutenção — cada linha marcada como
   🛍️ Produto ou 🔧 Serviço. Atualize o status conforme o andamento
@@ -255,6 +257,10 @@ usar o [PM2](https://pm2.keymetrics.io/) para reiniciar sozinho.
   `Aguardando peça`/`Concluído`). Ao mudar o status de um serviço, **o bot avisa o cliente na hora
   pelo WhatsApp** (ver "Notificações proativas" abaixo). A coluna **Entregue?** marca que o cliente
   já buscou o aparelho — marque-a quando ele retirar, para parar os lembretes de retirada.
+  Clicando no **protocolo (📄)** de um serviço abre a **Ordem de Serviço**: mostra o problema
+  relatado pelo cliente, um campo de **laudo técnico** (o que foi identificado/executado, que o
+  técnico vai preenchendo) e um botão **🖨️ Imprimir OS** que gera uma folha pronta para impressão
+  (nome, data, protocolo, aparelho, problema, laudo, valor e espaço para assinaturas).
 - **Configurações**: dados do estabelecimento, chave PIX (e nome/cidade do recebedor, exigidos
   pelo padrão do PIX Copia e Cola) e o plano (`basico` ou `profissional`).
 

@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS servicos_agendados (
   cliente_nome TEXT NOT NULL DEFAULT '',
   aparelho TEXT NOT NULL DEFAULT '',
   servico TEXT NOT NULL DEFAULT '',
+  descricao_problema TEXT NOT NULL DEFAULT '', -- relato do cliente coletado pelo bot (ex: "caiu água")
+  laudo_tecnico TEXT NOT NULL DEFAULT '',       -- o que o técnico identificou/executou (preenchido no painel)
   preco_centavos INTEGER, -- NULL = sem valor fixo definido (depende de diagnóstico)
   status TEXT NOT NULL DEFAULT 'em_analise' CHECK (status IN ('em_analise', 'em_manutencao', 'aguardando_peca', 'concluido')),
   retirado INTEGER NOT NULL DEFAULT 0, -- 1 = cliente já buscou o aparelho (para o lembrete de retirada parar)

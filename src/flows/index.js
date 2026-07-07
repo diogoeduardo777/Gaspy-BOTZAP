@@ -42,7 +42,10 @@ async function processarMensagem(telefone, texto, config) {
       return manutencaoFlow.processarAparelho(telefone, texto, sessao.dados, config);
 
     case 'manutencao_servico':
-      return manutencaoFlow.processarServicoEFinalizar(telefone, texto, sessao.dados, config);
+      return manutencaoFlow.processarServico(telefone, texto, sessao.dados, config);
+
+    case 'manutencao_descricao':
+      return manutencaoFlow.processarDescricaoEFinalizar(telefone, texto, sessao.dados, config);
 
     case 'consultando_status':
       return statusFlow.processarConsulta(telefone, texto, config);

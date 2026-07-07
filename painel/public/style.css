@@ -207,6 +207,45 @@ button.excluir:hover { background: var(--vermelho-claro); }
 
 .botao-primario.form-config-botao { max-width: 240px; }
 
+/* ---------- Botão OS na tabela + botão secundário ---------- */
+
+button.abrir-os {
+  background: transparent; color: var(--azul); border: 1px solid var(--azul-claro);
+  border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;
+}
+button.abrir-os:hover { background: var(--azul-claro); }
+
+.botao-secundario {
+  padding: 12px 18px; background: #fff; color: var(--texto); border: 1px solid var(--borda);
+  border-radius: 10px; font-size: 1em; font-weight: 600; cursor: pointer;
+}
+.botao-secundario:hover { background: var(--fundo); }
+
+/* ---------- Modal da Ordem de Serviço ---------- */
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(16, 24, 40, 0.55);
+  display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+}
+.modal-card {
+  background: #fff; border-radius: var(--raio); box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative;
+}
+.modal-card h2 { margin: 0 0 16px; font-size: 1.2em; }
+.modal-fechar {
+  position: absolute; top: 14px; right: 14px; background: transparent; border: none;
+  font-size: 1.2em; cursor: pointer; color: var(--texto-suave);
+}
+.os-info { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; margin-bottom: 16px; font-size: 0.9em; }
+.os-info p { margin: 0; }
+.os-campo { display: flex; flex-direction: column; gap: 4px; font-size: 0.88em; font-weight: 600; margin-bottom: 14px; }
+.os-campo textarea {
+  padding: 9px 10px; border: 1px solid var(--borda); border-radius: 8px; font-weight: normal;
+  font-size: 0.95em; font-family: inherit; resize: vertical;
+}
+.os-campo textarea[readonly] { background: var(--fundo); color: var(--texto-suave); }
+.modal-acoes { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
 /* ---------- Responsivo ---------- */
 
 @media (max-width: 640px) {
@@ -214,4 +253,5 @@ button.excluir:hover { background: var(--vermelho-claro); }
   main { padding: 14px; }
   .aba { padding: 16px; }
   nav { width: 100%; justify-content: flex-start; }
+  .os-info { grid-template-columns: 1fr; }
 }

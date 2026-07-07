@@ -1,10 +1,14 @@
 const db = require('./connection');
 
-function criarServico(estabelecimentoId, { telefone, clienteNome, aparelho, servico, precoCentavos }) {
+function criarServico(estabelecimentoId, { telefone, clienteNome, aparelho, servico, precoCentavos, descricaoProblema }) {
   const info = db.prepare(`
-    INSERT INTO servicos_agendados (estabelecimento_id, telefone, cliente_nome, aparelho, servico, preco_centavos)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(estabelecimentoId, telefone, clienteNome, aparelho, servico, precoCentavos === undefined ? null : precoCentavos);
+    INSERT INTO servicos_agendados (estabelecimento_id, telefone, cliente_nome, aparelho, servico, descricao_problema, preco_centavos)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    estabelecimentoId, telefone, clienteNome, aparelho, servico,
+    descricaoProblema || '',
+    precoCentavos === undefined ? null : precoCentavos
+  );
   return buscarPorId(estabelecimentoId, info.lastInsertRowid);
 }
 
@@ -63,7 +67,15 @@ function registrarLembreteRetirada(estabelecimentoId, id) {
   return buscarPorId(estabelecimentoId, id);
 }
 
+function atualizarLaudo(estabelecimentoId, id, laudo) {
+  db.prepare(`
+    UPDATE servicos_agendados SET laudo_tecnico = ? WHERE estabelecimento_id = ? AND id = ?
+  `).run(laudo || '', estabelecimentoId, id);
+  return buscarPorId(estabelecimentoId, id);
+}
+
 module.exports = {
   criarServico, buscarPorId, buscarPorNome, listarServicos, atualizarStatus,
-  atualizarDataPrevista, marcarRetirado, listarPendentesRetirada, registrarLembreteRetirada
+  atualizarDataPrevista, marcarRetirado, listarPendentesRetirada, registrarLembreteRetirada,
+  atualizarLaudo
 };
