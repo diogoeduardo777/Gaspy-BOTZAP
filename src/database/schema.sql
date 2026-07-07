@@ -58,6 +58,8 @@ CREATE TABLE IF NOT EXISTS servicos_agendados (
   servico TEXT NOT NULL DEFAULT '',
   preco_centavos INTEGER, -- NULL = sem valor fixo definido (depende de diagnóstico)
   status TEXT NOT NULL DEFAULT 'em_analise' CHECK (status IN ('em_analise', 'em_manutencao', 'aguardando_peca', 'concluido')),
+  retirado INTEGER NOT NULL DEFAULT 0, -- 1 = cliente já buscou o aparelho (para o lembrete de retirada parar)
+  lembretes_retirada INTEGER NOT NULL DEFAULT 0, -- quantos lembretes de retirada já foram enviados
   data_inicio TEXT NOT NULL DEFAULT (datetime('now')),
   data_prevista TEXT,
   data_conclusao TEXT,

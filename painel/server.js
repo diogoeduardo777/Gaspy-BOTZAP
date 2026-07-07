@@ -8,6 +8,7 @@ const pedidosRepo = require('../src/database/pedidosRepo');
 const servicosRepo = require('../src/database/servicosRepo');
 const servicosCatalogoRepo = require('../src/database/servicosCatalogoRepo');
 const { formatarProtocolo } = require('../src/flows/manutencaoFlow');
+const notificador = require('../src/bot/notificador');
 
 const PAINEL_SENHA = process.env.PAINEL_SENHA;
 if (!PAINEL_SENHA) {
@@ -128,7 +129,21 @@ function criarApp() {
     if (!statusValidos.includes(status)) {
       return res.status(400).json({ erro: `Status inválido. Use um de: ${statusValidos.join(', ')}` });
     }
-    const servico = servicosRepo.atualizarStatus(config.id, Number(req.params.servicoId), status);
+    const id = Number(req.params.servicoId);
+    const anterior = servicosRepo.buscarPorId(config.id, id);
+    const servico = servicosRepo.atualizarStatus(config.id, id, status);
+
+    // Só notifica se o status realmente mudou (evita mensagem repetida ao cliente).
+    if (anterior && anterior.status !== status) {
+      notificador.notificarStatusServico(servico, config.nome_empresa).catch(() => {});
+    }
+    res.json(paraServicoApi(servico));
+  });
+
+  app.patch('/api/servicos/:servicoId/retirado', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    const { retirado } = req.body || {};
+    const servico = servicosRepo.marcarRetirado(config.id, Number(req.params.servicoId), !!retirado);
     res.json(paraServicoApi(servico));
   });
 
@@ -205,6 +220,7 @@ function criarApp() {
       descricao: `${servico.aparelho} — ${servico.servico}`,
       valor_reais: servico.preco_centavos !== null ? (servico.preco_centavos / 100).toFixed(2) : null,
       status: servico.status,
+      retirado: !!servico.retirado,
       criado_em: servico.criado_em
     }));
 

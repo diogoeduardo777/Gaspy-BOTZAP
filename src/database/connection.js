@@ -29,6 +29,12 @@ const colunasServicosAgendados = db.prepare("PRAGMA table_info(servicos_agendado
 if (!colunasServicosAgendados.includes('preco_centavos')) {
   db.exec('ALTER TABLE servicos_agendados ADD COLUMN preco_centavos INTEGER');
 }
+if (!colunasServicosAgendados.includes('retirado')) {
+  db.exec('ALTER TABLE servicos_agendados ADD COLUMN retirado INTEGER NOT NULL DEFAULT 0');
+}
+if (!colunasServicosAgendados.includes('lembretes_retirada')) {
+  db.exec('ALTER TABLE servicos_agendados ADD COLUMN lembretes_retirada INTEGER NOT NULL DEFAULT 0');
+}
 
 const totalEstabelecimentos = db.prepare('SELECT COUNT(*) AS total FROM estabelecimentos').get().total;
 if (totalEstabelecimentos === 0) {

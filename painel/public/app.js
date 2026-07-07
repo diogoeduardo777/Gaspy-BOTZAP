@@ -225,7 +225,7 @@ async function carregarAtendimentos() {
   const corpo = document.querySelector('#tabela-atendimentos tbody');
 
   if (atendimentos.length === 0) {
-    corpo.innerHTML = linhaVazia(8, 'Nada por aqui ainda. Pedidos de produtos e solicitações de manutenção aparecem nesta lista assim que chegarem pelo WhatsApp.');
+    corpo.innerHTML = linhaVazia(9, 'Nada por aqui ainda. Pedidos de produtos e solicitações de manutenção aparecem nesta lista assim que chegarem pelo WhatsApp.');
     return;
   }
 
@@ -235,6 +235,11 @@ async function carregarAtendimentos() {
     const mapaStatus = ehProduto ? STATUS_PEDIDO : STATUS_SERVICO;
     const endpoint = ehProduto ? `/api/pedidos/${item.id}/status` : `/api/servicos/${item.id}/status`;
     const identificador = ehProduto ? `#${item.id}` : item.protocolo;
+
+    // "Entregue?" só faz sentido para serviços (aparelho retirado pelo cliente).
+    const celulaEntregue = ehProduto
+      ? '<td>—</td>'
+      : `<td><input type="checkbox" class="toggle-retirado" data-id="${item.id}" ${item.retirado ? 'checked' : ''}></td>`;
 
     const linha = document.createElement('tr');
     linha.innerHTML = `
@@ -249,6 +254,7 @@ async function carregarAtendimentos() {
           ${Object.entries(mapaStatus).map(([valor, rotulo]) => `<option value="${valor}" ${valor === item.status ? 'selected' : ''}>${rotulo}</option>`).join('')}
         </select>
       </td>
+      ${celulaEntregue}
       <td>${esc(item.criado_em)}</td>
     `;
     corpo.appendChild(linha);
@@ -261,6 +267,15 @@ async function carregarAtendimentos() {
       await chamarApi(select.dataset.endpoint, {
         method: 'PATCH',
         body: JSON.stringify({ status: select.value })
+      });
+    });
+  });
+
+  corpo.querySelectorAll('.toggle-retirado').forEach((checkbox) => {
+    checkbox.addEventListener('change', async () => {
+      await chamarApi(`/api/servicos/${checkbox.dataset.id}/retirado`, {
+        method: 'PATCH',
+        body: JSON.stringify({ retirado: checkbox.checked })
       });
     });
   });

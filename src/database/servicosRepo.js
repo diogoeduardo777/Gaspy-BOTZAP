@@ -39,4 +39,31 @@ function atualizarDataPrevista(estabelecimentoId, id, dataPrevista) {
   return buscarPorId(estabelecimentoId, id);
 }
 
-module.exports = { criarServico, buscarPorId, buscarPorNome, listarServicos, atualizarStatus, atualizarDataPrevista };
+function marcarRetirado(estabelecimentoId, id, retirado) {
+  db.prepare(`
+    UPDATE servicos_agendados SET retirado = ? WHERE estabelecimento_id = ? AND id = ?
+  `).run(retirado ? 1 : 0, estabelecimentoId, id);
+  return buscarPorId(estabelecimentoId, id);
+}
+
+// Serviços prontos (concluído) que o cliente ainda não buscou — candidatos ao lembrete de retirada.
+function listarPendentesRetirada(estabelecimentoId) {
+  return db.prepare(`
+    SELECT * FROM servicos_agendados
+    WHERE estabelecimento_id = ? AND status = 'concluido' AND retirado = 0
+    ORDER BY data_conclusao
+  `).all(estabelecimentoId);
+}
+
+function registrarLembreteRetirada(estabelecimentoId, id) {
+  db.prepare(`
+    UPDATE servicos_agendados SET lembretes_retirada = lembretes_retirada + 1
+    WHERE estabelecimento_id = ? AND id = ?
+  `).run(estabelecimentoId, id);
+  return buscarPorId(estabelecimentoId, id);
+}
+
+module.exports = {
+  criarServico, buscarPorId, buscarPorNome, listarServicos, atualizarStatus,
+  atualizarDataPrevista, marcarRetirado, listarPendentesRetirada, registrarLembreteRetirada
+};

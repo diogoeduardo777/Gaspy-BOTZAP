@@ -217,9 +217,35 @@ usar o [PM2](https://pm2.keymetrics.io/) para reiniciar sozinho.
   pediram pelo WhatsApp — compras de produtos e solicitações de manutenção — cada linha marcada como
   🛍️ Produto ou 🔧 Serviço. Atualize o status conforme o andamento
   (produtos: `Pendente`/`Pago`/`Cancelado`/`Concluído`; serviços: `Em análise`/`Em manutenção`/
-  `Aguardando peça`/`Concluído`) — o cliente vê a mudança na próxima consulta pelo WhatsApp.
+  `Aguardando peça`/`Concluído`). Ao mudar o status de um serviço, **o bot avisa o cliente na hora
+  pelo WhatsApp** (ver "Notificações proativas" abaixo). A coluna **Entregue?** marca que o cliente
+  já buscou o aparelho — marque-a quando ele retirar, para parar os lembretes de retirada.
 - **Configurações**: dados do estabelecimento, chave PIX (e nome/cidade do recebedor, exigidos
   pelo padrão do PIX Copia e Cola) e o plano (`basico` ou `profissional`).
+
+## Notificações proativas (avisos automáticos ao cliente)
+
+Além de responder quando o cliente escreve, o bot **toma a iniciativa** em dois momentos — o que
+reduz a enxurrada de "tá pronto?" e os aparelhos esquecidos na loja:
+
+1. **Mudança de status**: quando o dono muda o status de um serviço no painel, o cliente recebe na
+   hora uma mensagem (ex: *"Seu aparelho está pronto para retirada! 🎉"*). Só dispara quando o
+   status realmente muda, para não mandar mensagem repetida.
+2. **Lembrete de retirada**: serviços marcados como "Concluído" que o cliente ainda não buscou
+   recebem um lembrete automático (por padrão em 2 e 5 dias após a conclusão). Assim que o dono
+   marca a coluna **Entregue?**, os lembretes param.
+
+Configuração no `.env` (todas opcionais, com padrões sensatos):
+
+| Variável | Padrão | O que faz |
+|---|---|---|
+| `NOTIFICACOES_PROATIVAS` | `true` | Interruptor geral. `false` desliga todos os avisos automáticos. |
+| `LEMBRETE_RETIRADA_DIAS` | `2,5` | Dias após a conclusão para os lembretes (a quantidade de números define quantos lembretes). |
+| `AGENDADOR_INTERVALO_MIN` | `60` | De quantos em quantos minutos o sistema verifica se há lembretes a enviar. |
+
+> ⚠️ Mensagens proativas aumentam o volume de envios saindo do número. Como o `whatsapp-web.js` é
+> não-oficial, disparos em excesso elevam o risco de bloqueio — por isso os lembretes são poucos e
+> espaçados por padrão. Use com bom senso e, idealmente, num número dedicado ao atendimento.
 
 ## Sobre o pagamento via PIX
 

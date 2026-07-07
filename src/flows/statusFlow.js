@@ -51,4 +51,4 @@ function montarMensagemStatus(registro) {
   return texto;
 }
 
-module.exports = { iniciarConsultaStatus, processarConsulta };
+module.exports = { iniciarConsultaStatus, processarConsulta, MENSAGENS_STATUS };
