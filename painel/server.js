@@ -52,19 +52,51 @@ function precisaConfigurarSenha() {
   return !estabelecimentoRepo.buscarSenhaHash(clientIdAtual());
 }
 
+// Anti-força-bruta simples: bloqueia um IP por alguns minutos depois de muitas senhas erradas.
+const MAX_TENTATIVAS = 10;
+const BLOQUEIO_MS = 5 * 60 * 1000; // 5 minutos
+const tentativasPorIp = new Map(); // ip -> { falhas, bloqueadoAte }
+
+function ipDaRequisicao(req) {
+  return req.ip || (req.socket && req.socket.remoteAddress) || 'desconhecido';
+}
+
+function registrarFalha(ip) {
+  const reg = tentativasPorIp.get(ip) || { falhas: 0, bloqueadoAte: 0 };
+  reg.falhas += 1;
+  if (reg.falhas >= MAX_TENTATIVAS) {
+    reg.bloqueadoAte = Date.now() + BLOQUEIO_MS;
+    reg.falhas = 0;
+  }
+  tentativasPorIp.set(ip, reg);
+}
+
+function limparFalhas(ip) {
+  tentativasPorIp.delete(ip);
+}
+
 function autenticar(req, res, next) {
+  const ip = ipDaRequisicao(req);
+  const reg = tentativasPorIp.get(ip);
+  if (reg && reg.bloqueadoAte > Date.now()) {
+    const faltamSeg = Math.ceil((reg.bloqueadoAte - Date.now()) / 1000);
+    return res.status(429).json({ erro: `Muitas tentativas. Tente novamente em ${faltamSeg} segundos.` });
+  }
+
   const senhaEnviada = req.headers['x-painel-senha'] || '';
 
   // Prioridade 1: senha fixa via .env (caminho Docker/servidor).
   if (PAINEL_SENHA) {
-    if (senhaEnviada === PAINEL_SENHA) return next();
+    if (senhaEnviada === PAINEL_SENHA) { limparFalhas(ip); return next(); }
+    registrarFalha(ip);
     return res.status(401).json({ erro: 'Senha do painel inválida ou não informada.' });
   }
 
   // Prioridade 2: senha criada no 1º acesso (guardada com hash).
   const hash = estabelecimentoRepo.buscarSenhaHash(clientIdAtual());
   if (hash) {
-    if (verificarSenha(senhaEnviada, hash)) return next();
+    if (verificarSenha(senhaEnviada, hash)) { limparFalhas(ip); return next(); }
+    registrarFalha(ip);
     return res.status(401).json({ erro: 'Senha do painel inválida ou não informada.' });
   }
 
@@ -345,9 +377,19 @@ function paraServicoApi(servico) {
 
 function iniciarPainel() {
   const porta = process.env.PORT || process.env.PAINEL_PORT || 3000;
+  // Por padrão o painel escuta SÓ no próprio computador (127.0.0.1) — ninguém na rede Wi-Fi
+  // alcança. Para liberar o acesso de outros aparelhos na rede de propósito, defina
+  // PAINEL_HOST=0.0.0.0 no .env (ciente de que aí a senha trafega sem HTTPS na rede local).
+  const host = process.env.PAINEL_HOST || '127.0.0.1';
   const app = criarApp();
-  app.listen(porta, () => {
-    console.log(`\n🖥️  Painel administrativo disponível em http://localhost:${porta}\n`);
+  app.listen(porta, host, () => {
+    const ondeAcessar = host === '127.0.0.1' ? 'http://localhost' : `http://${host}`;
+    console.log(`\n🖥️  Painel administrativo disponível em ${ondeAcessar}:${porta}`);
+    if (host === '127.0.0.1') {
+      console.log('   (acessível apenas neste computador — mais seguro)\n');
+    } else {
+      console.log('   ⚠️  Aberto para a rede local (PAINEL_HOST). Use uma senha forte.\n');
+    }
   });
   return app;
 }

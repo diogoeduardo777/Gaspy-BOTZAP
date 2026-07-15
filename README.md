@@ -1,383 +1,169 @@
-# Gaspy BOTZAP
+# Gaspy BOTZAP — Guia de instalação na TecCell
 
-Sistema de autoatendimento via WhatsApp para estabelecimentos, com dois planos:
+Este guia é o **passo a passo prático** para colocar o sistema rodando no computador da loja, com
+tudo funcionando: **WhatsApp**, **banco de dados** e **impressão da ordem de serviço**.
 
-- **Básico**: menu por mensagens pré-configuradas, cardápio dinâmico (editável no painel) e
-  pagamento via PIX Copia e Cola.
-- **Profissional**: atendimento conversacional com IA (Groq, gratuito), que responde dúvidas,
-  sugere itens do cardápio e fecha pedidos com PIX automaticamente.
+O sistema é um atendente automático de WhatsApp + um painel web onde o dono gerencia produtos,
+serviços, pedidos e ordens de serviço. Roda **no computador da própria loja** (não é na nuvem).
 
-Todo o sistema roda com tecnologias gratuitas: [whatsapp-web.js](https://wwebjs.dev/) (automação
-do WhatsApp Web, sem custo por conversa), SQLite (banco embutido, sem servidor) e a API gratuita da
-[Groq](https://console.groq.com/) para o plano com IA.
+> 📚 Detalhes técnicos, outras formas de instalar (Docker/npm), PIX, IA e multi-tenant estão em
+> [`docs/DETALHES-TECNICOS.md`](docs/DETALHES-TECNICOS.md).
 
-## Como funciona
+---
 
-- Um único processo Node.js roda o bot do WhatsApp **e** o painel administrativo web.
-- Os dados (cardápio/produtos, configurações, pedidos, serviços agendados com protocolo, sessões de
-  conversa, logs) ficam em `data/gaspy.db` (SQLite).
-- Na primeira execução, se o banco estiver vazio, o sistema semeia automaticamente um
-  estabelecimento a partir de `clients/<CLIENT_ID>.json` (padrão: `clients/teccell.json`).
+## O que você precisa antes de começar
 
-## Formas de instalar (resumo)
+- ✅ Um **computador com Windows** que possa ficar **ligado durante o expediente**.
+- ✅ O **celular com o WhatsApp da loja** em mãos (para escanear o QR Code).
+- ✅ Uma **impressora instalada no Windows** (para imprimir a ordem de serviço).
+- ✅ **Internet** no computador (o WhatsApp precisa; o painel e a impressão funcionam mesmo offline).
 
-| Forma | Pré-requisito na máquina da loja | Melhor para |
+> ⚠️ **Sobre o WhatsApp:** o sistema usa uma automação **não-oficial** do WhatsApp. Existe um risco
+> (baixo, mas real) de o número ser bloqueado pelo WhatsApp. Recomendação: use um **chip/número
+> dedicado** para a loja, e **não** dispare mensagens em massa para quem não pediu.
+
+---
+
+## Parte 1 — Gerar o pacote (você faz UMA vez, na SUA máquina)
+
+Isso é feito **no seu computador** (que tem o projeto e o Node.js), não no da loja.
+
+1. Abra o PowerShell na pasta do projeto.
+2. Rode:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File portatil\empacotar.ps1
+   ```
+3. No fim, será criado o arquivo **`dist\Gaspy-TecCell-portatil.zip`**.
+
+Esse `.zip` já vem com **tudo dentro** (o programa, o Node embutido e o navegador interno do bot).
+A loja **não precisa instalar nada** — nem Node.js, nem Docker, nem Git.
+
+> ⚠️ **Ainda não testamos esse pacote portátil num Windows "limpo".** Antes de ir à loja, gere o
+> `.zip` e **teste numa outra máquina/pasta** seguindo a Parte 2. Se der erro, veja
+> "Se algo der errado" no fim ou use o [caminho alternativo com Node.js](#caminho-alternativo-instalar-com-nodejs).
+
+---
+
+## Parte 2 — Instalar no computador da TecCell
+
+1. **Leve o `.zip`** para o computador da loja (pendrive, Google Drive, WhatsApp Web, etc.).
+2. **Descompacte** numa pasta simples, tipo `C:\Gaspy-TecCell`.
+   (Evite deixar dentro de "Downloads" ou numa pasta de rede.)
+3. Abra a pasta e dê **duplo clique em `iniciar.bat`**.
+   - Se o Windows mostrar uma tela azul (SmartScreen), clique em **"Mais informações"** →
+     **"Executar assim mesmo"**.
+   - Uma **janela preta** vai abrir e **ficar aberta**. **NÃO FECHE** essa janela — é ela que mantém
+     o bot no ar (fechar = desligar o atendimento).
+
+---
+
+## Parte 3 — Conectar o WhatsApp da loja
+
+1. Na primeira vez, a janela preta mostra um **QR Code**.
+2. No celular da loja, abra o WhatsApp → **⋮ (menu)** → **Aparelhos conectados** →
+   **Conectar um aparelho**.
+3. **Aponte a câmera para o QR Code** da janela.
+4. Quando aparecer **"✅ Bot conectado!"**, o WhatsApp está funcionando.
+
+> A conexão fica **salva** na pasta `sessions`. Nas próximas vezes que ligar, **não** precisa
+> escanear de novo — desde que você não apague essa pasta.
+
+---
+
+## Parte 4 — Configurar o painel (senha, dados, serviços)
+
+1. O **navegador abre sozinho** em `http://localhost:3000` (se não abrir, digite isso na barra de
+   endereços).
+2. No **primeiro acesso**, o painel pede para **criar uma senha** — escolha uma e guarde.
+3. Na aba **⚙️ Configurações**, preencha:
+   - Nome da loja, número do atendente, horário.
+   - **Chave PIX** (+ nome do recebedor e cidade) — sem isso o bot não gera o código de pagamento.
+4. Na aba **🧰 Cadastro de Serviços**, ajuste os serviços e preços (troca de tela, formatação, etc.).
+5. Na aba **🛍️ Loja de Acessórios**, cadastre os produtos à venda (capinhas, carregadores...).
+
+O **banco de dados é criado automaticamente** na pasta `data` — você não precisa instalar nem
+configurar banco nenhum.
+
+> 🔒 Por segurança, o painel abre **apenas no próprio computador** onde o bot roda (por isso o
+> `localhost`). Ninguém na rede Wi-Fi da loja consegue acessar. Se você *precisar* abrir o painel
+> em outro aparelho da loja (um tablet, por exemplo), defina `PAINEL_HOST=0.0.0.0` no `iniciar.bat`
+> — mas aí use uma senha forte, porque o painel fica visível para a rede.
+
+## Parte 5 — Testar a impressora (ordem de serviço)
+
+A impressão usa a **impressora que já está instalada no Windows** — não precisa de nada especial.
+
+1. Confirme que a impressora está instalada e funcionando no Windows (faça um teste de impressão
+   normal do Windows antes, se for a primeira vez).
+2. No painel, aba **📋 Pedidos e Agendamentos**, clique no **protocolo (📄)** de um serviço.
+3. Na janela que abre, clique em **🖨️ Imprimir OS**.
+4. Vai abrir a **janela de impressão do navegador** — escolha a impressora e mande imprimir.
+
+Dicas:
+- A folha da OS é formatada para papel **A4 / Carta** (impressora comum jato de tinta ou laser).
+- Se a janela de impressão **não abrir**, o navegador pode estar bloqueando pop-ups — permita
+  pop-ups para `localhost`.
+- Deixe a impressora como **padrão** no Windows para a impressão sair mais rápido.
+
+---
+
+## Parte 6 — Deixar ligado sozinho (recomendado)
+
+Para o bot voltar sozinho depois que o computador reiniciar ou faltar energia:
+
+- Dê **duplo clique em `instalar-inicializacao.bat`** (uma vez).
+- A partir daí, o Gaspy inicia junto com o Windows.
+- Para desfazer: duplo clique em `desinstalar-inicializacao.bat`.
+
+---
+
+## ✅ Checklist final (tudo funcionando?)
+
+Pegue **outro celular** (não o da loja) e teste:
+
+| Teste | Como | Esperado |
 |---|---|---|
-| **Pacote portátil (Windows)** | Nada | Loja Windows sem ninguém técnico — descompactar e dar duplo clique |
-| **Docker (1 comando)** | Docker instalado | Quem já tem/topa instalar Docker; Linux, macOS ou Windows |
-| **Manual (npm)** | Node.js instalado | Desenvolvimento e ajustes no código |
+| **WhatsApp** | Mande "oi" para o número da loja | O bot responde com o menu |
+| **Banco** | Abra um chamado (opção 1) até o protocolo | O serviço aparece na aba "Pedidos e Agendamentos" do painel |
+| **Impressora** | Abra a OS desse serviço → Imprimir OS | Sai a folha impressa |
+| **PIX** | Peça um produto (opção 3) e feche | Chega o código PIX Copia e Cola |
 
-Em todas as formas, **a senha do painel é criada no primeiro acesso** (uma tela pede para você
-definir a senha) — não precisa editar arquivo para isso.
+---
 
-## Pacote portátil para Windows (mais simples para a loja)
+## 💾 Backup dos dados
 
-Aqui a loja **não instala nada** — nem Node.js, nem Docker. Você gera um `.zip` uma vez e envia.
+Todos os dados (pedidos, serviços, clientes, cardápio) ficam na pasta **`data`**.
+De vez em quando, **copie essa pasta** para um pendrive ou nuvem. Se o computador estragar, é só
+colar a pasta `data` numa instalação nova que tudo volta.
 
-**Você (uma vez, na sua máquina com Node.js):**
-```powershell
-powershell -ExecutionPolicy Bypass -File portatil\empacotar.ps1
-```
-Isso gera `dist\Gaspy-TecCell-portatil.zip` já com o Node embutido, as dependências e o Chromium
-lá dentro.
+---
 
-**A loja:**
-1. Descompacta o `.zip`.
-2. Dá duplo clique em **`iniciar.bat`** (deixa a janela preta aberta).
-3. Escaneia o QR Code que aparece na janela com o WhatsApp da loja.
-4. O navegador abre no painel; no primeiro acesso, cria a senha.
-5. (Opcional) Duplo clique em **`instalar-inicializacao.bat`** para o bot ligar sozinho quando o PC iniciar.
+## 🆘 Se algo der errado
 
-> ⚠️ **Ainda não testado numa máquina Windows limpa** durante o desenvolvimento (os scripts foram
-> escritos e revisados, mas não executados de ponta a ponta aqui). Gere o pacote e teste numa
-> máquina antes de entregar para a loja. Observações: é só para **Windows 64 bits**, o `.zip` fica
-> grande (~200 MB por causa do Chromium), e o Windows pode mostrar um aviso de SmartScreen no
-> `.bat` (basta "Mais informações" → "Executar assim mesmo"). Para atualizar a loja depois, gere um
-> `.zip` novo e substitua — a pasta `data` (dados) pode ser preservada.
-
-## Instalação rápida com Docker (recomendado para quem tem Docker)
-
-Essa é a forma mais simples de instalar via internet: **não precisa instalar Node.js nem Git**, só
-o Docker. Um único comando baixa o projeto, monta tudo e já deixa rodando.
-
-**O que você precisa ter instalado antes:** [Docker](https://docs.docker.com/get-docker/) (no
-Windows, isso é o "Docker Desktop"). É a única instalação manual necessária — depois disso, todo
-o resto é automático, inclusive para futuras lojas nesse mesmo computador.
-
-### Linux / macOS
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/diogoeduardo777/Gaspy-BOTZAP/main/install.sh | bash
-```
-
-### Windows (PowerShell)
-
-```powershell
-irm https://raw.githubusercontent.com/diogoeduardo777/Gaspy-BOTZAP/main/install.ps1 | iex
-```
-
-Esses comandos baixam o projeto (sem precisar de Git), criam o `.env` a partir do modelo, e sobem
-o sistema com `docker compose`. Ao final, o terminal mostra a pasta onde o projeto foi instalado e
-os próximos passos.
-
-Se preferir revisar o script antes de rodar (recomendável sempre que for colar um comando de
-instalação de alguém na internet — inclusive o nosso), abra
-[`install.sh`](install.sh) ou [`install.ps1`](install.ps1) e veja o que ele faz: só baixa o
-código-fonte do próprio repositório e chama `docker compose`.
-
-### Depois de instalar
-
-1. Veja o QR Code do WhatsApp:
-   ```
-   docker compose logs -f
-   ```
-   Escaneie com o celular do estabelecimento (Aparelhos conectados → Conectar um aparelho).
-2. Acesse o painel em `http://localhost:3000` (ou na porta definida em `PAINEL_PORT`). **No primeiro
-   acesso, o painel pede para você criar uma senha** — não precisa editar arquivo. Se preferir fixar
-   a senha por fora (ex: em servidor), defina `PAINEL_SENHA` no `.env` que ela tem prioridade.
-3. Se for usar o Plano Profissional (IA), defina a `GROQ_API_KEY` no `.env` e rode
-   `docker compose up -d --build`.
-
-Comandos úteis do dia a dia:
-
-| Ação | Comando |
+| Problema | O que fazer |
 |---|---|
-| Ver logs / QR Code | `docker compose logs -f` |
-| Parar | `docker compose stop` |
-| Iniciar de novo | `docker compose start` |
-| Atualizar para uma versão nova do código | `docker compose up -d --build` |
+| Janela preta abre e fecha na hora | Clique com o botão direito em `iniciar.bat` → "Executar como administrador". Se persistir, veja o erro rodando pelo caminho alternativo abaixo. |
+| Não aparece o QR Code | Feche a janela preta e abra o `iniciar.bat` de novo. Confira se há internet. |
+| "Porta 3000 em uso" | Abra o `iniciar.bat` no bloco de notas e troque `PAINEL_PORT=3000` por `3001` (e acesse `localhost:3001`). |
+| WhatsApp desconectou | Reabra o `iniciar.bat`. Se pedir QR de novo, escaneie novamente. |
+| A folha de impressão sai cortada | Na janela de impressão, ajuste o tamanho do papel para A4 e as margens para "padrão". |
+| Painel pede senha e esqueci | Apague o arquivo `data/gaspy.db` (isso apaga os dados!) **ou** defina `PAINEL_SENHA` no `iniciar.bat`. |
 
-A sessão do WhatsApp e o banco de dados ficam salvos nas pastas `sessions/` e `data/` **fora** do
-container (graças aos volumes do `docker-compose.yml`), então reiniciar ou atualizar o container
-não apaga nada nem pede escanear o QR Code de novo.
+---
 
-> ⚠️ Não testamos o build Docker numa máquina com Docker instalado durante o desenvolvimento desta
-> automação (só revisamos cuidadosamente o `Dockerfile`/`docker-compose.yml`). Rode uma vez num
-> ambiente de teste antes de confiar 100% nela para a loja.
+## Caminho alternativo: instalar com Node.js
 
-## Instalação manual (sem Docker)
+Se o pacote portátil não funcionar, dá para rodar instalando o Node.js (mais testado, porém com
+mais passos):
 
-Alternativa para quem já tem Node.js instalado ou quer rodar em modo de desenvolvimento
-(`npm run dev`, com reinício automático ao editar arquivos).
-
-1. Instale as dependências:
-   ```
+1. Instale o **Node.js LTS**: https://nodejs.org (instalação padrão).
+2. Copie a pasta do projeto para o computador (sem as pastas `node_modules`, `data` e `sessions`).
+3. No PowerShell, dentro da pasta, rode:
+   ```powershell
    npm install
-   ```
-2. Copie o arquivo de variáveis de ambiente e ajuste os valores:
-   ```
-   copy .env.example .env
-   ```
-   No mínimo, defina uma `PAINEL_SENHA` própria. Se for usar o Plano Profissional, defina também
-   `GROQ_API_KEY` (chave gratuita em https://console.groq.com/keys).
-3. Rode o sistema:
-   ```
    npm start
    ```
-4. Escaneie o QR Code exibido no terminal com o WhatsApp do estabelecimento (Aparelhos
-   conectados → Conectar um aparelho).
-5. Acesse o painel em `http://localhost:3000` e informe a `PAINEL_SENHA` configurada.
+4. Siga as Partes 3, 4 e 5 acima (QR Code, painel, impressão).
 
-Nas próximas vezes, `npm start` reconecta a sessão salva em `sessions/` sem precisar escanear o QR
-de novo — desde que a pasta não seja apagada.
-
-## Guia rápido: instalar em um novo computador (ex: loja TecCell)
-
-Cada estabelecimento roda seu **próprio processo**, com seu **próprio número de WhatsApp**, no
-computador do próprio estabelecimento.
-
-**Caminho mais simples:** rode o comando da seção [Instalação rápida com Docker](#instalação-rápida-com-docker-recomendado)
-no computador da loja — ele já baixa o projeto e sobe tudo sozinho, sem precisar instalar Node.js
-ou Git. Só depois disso, ajuste o `.env` (`CLIENT_ID=teccell`, `PAINEL_SENHA`) e rode
-`docker compose up -d --build` de novo para aplicar.
-
-O passo a passo abaixo é a via manual (sem Docker), para quem preferir ou não puder instalar Docker
-no computador da loja:
-
-### 1. Levar os arquivos do projeto para o computador da loja
-
-Opção mais simples, via Git (recomendado se o computador tiver acesso à internet):
-```
-git clone https://github.com/diogoeduardo777/Gaspy-BOTZAP.git
-cd Gaspy-BOTZAP
-```
-Se o repositório for privado, será pedido login do GitHub na hora do clone.
-
-Alternativa sem Git: copie a pasta do projeto para um pendrive **sem** as pastas `node_modules/`,
-`sessions/` e `data/` (elas são recriadas automaticamente), leve até o computador da loja e cole em
-um local como `C:\Gaspy-BOTZAP`.
-
-### 2. Instalar o Node.js
-
-Baixe e instale a versão LTS em https://nodejs.org (marque a opção padrão de instalação). Não é
-necessário instalar o Chrome separadamente — o próprio `npm install` baixa um Chromium para o bot
-usar.
-
-### 3. Instalar as dependências do projeto
-
-Abra o terminal (PowerShell) dentro da pasta do projeto e rode:
-```
-npm install
-```
-
-### 4. Configurar o `.env` para a TecCell
-
-```
-copy .env.example .env
-```
-Abra o `.env` num editor de texto e ajuste:
-```
-CLIENT_ID=teccell
-PAINEL_SENHA=escolha-uma-senha-seguranca
-```
-Deixe `GROQ_API_KEY` em branco por enquanto (a TecCell começa no Plano Básico, sem IA — dá para
-ativar depois pelo painel, bastando preencher essa chave e trocar o plano).
-
-### 5. Rodar e conectar o WhatsApp da loja
-
-```
-npm start
-```
-Na primeira execução, o sistema cria o banco `data/gaspy.db` e semeia automaticamente o
-estabelecimento "TecCell" a partir de `clients/teccell.json` (menu com as 4 opções: Solicitar
-manutenção, Consultar status, Loja de acessórios, Falar com atendente).
-
-Escaneie o QR Code exibido no terminal com o **WhatsApp da loja** (Aparelhos conectados → Conectar
-um aparelho).
-
-### 6. Ajustar os dados reais pelo painel
-
-Acesse `http://localhost:3000`, informe a `PAINEL_SENHA` e ajuste na aba **Configurações**:
-- Número do atendente, horário de atendimento, chave PIX (+ nome do recebedor e cidade).
-
-Na aba **🍽️ Loja de Acessórios**, cadastre os acessórios da loja de vendas (capinhas, carregadores,
-fones...), com preço e, se quiser controlar quantidade, o campo **Estoque** — deixe em branco para
-não controlar estoque daquele item. Itens com estoque `0` somem automaticamente da lista que o
-cliente vê no WhatsApp.
-
-Na aba **🧰 Cadastro de Serviços**, já vêm 6 serviços de exemplo (Diagnóstico, Troca de tela, Troca
-de bateria, Formatação, Upgrade de SSD, Limpeza interna) com preços de referência — edite os preços
-reais ou adicione/remova serviços. É essa lista que o cliente vê ao escolher "Solicitar manutenção".
-
-Teste no WhatsApp da loja: mande "oi", escolha **1** (Solicitar manutenção) e siga o fluxo — ele
-mostra a lista de serviços cadastrados com preço e gera um protocolo (ex: `#0001`). Depois escolha
-**2** (Consultar status) e informe o protocolo ou o nome para ver o status atual. Na aba
-**📋 Pedidos e Agendamentos** do painel, você consegue mudar o status (Em análise → Em manutenção →
-Aguardando peça → Concluído) e definir uma previsão de entrega — a próxima consulta do cliente já
-reflete a mudança.
-
-### 7. Deixar rodando 24h
-
-Se instalou via Docker, isso já está resolvido: `restart: unless-stopped` no `docker-compose.yml`
-faz o container voltar sozinho depois de uma queda de energia ou reinício do computador (mesmo que
-o Docker Desktop precise abrir automaticamente ao ligar o Windows, o que ele já faz por padrão).
-
-Se instalou pela via manual (sem Docker), veja a seção
-[Deploy](#deploy--por-que-não-uma-paas-gratuita-renderrailwayheroku) mais abaixo — o recomendado é
-usar o [PM2](https://pm2.keymetrics.io/) para reiniciar sozinho.
-
-## Usando o painel
-
-- **Produtos/Acessórios** (aba com nome personalizável): adicionar, editar preço/disponibilidade/
-  estoque e excluir itens à venda. As mudanças valem imediatamente para o bot, sem precisar
-  reiniciar. Itens com estoque `0` somem da lista que o cliente vê. O **nome dessa seção é
-  personalizável por estabelecimento** — configure em Configurações → "Nome da seção de itens" (ex:
-  `🍽️ Cardápio` para um restaurante/salão, `🛍️ Loja de Acessórios` para uma assistência técnica,
-  `📦 Produtos` para qualquer outro tipo de loja). O texto escolhido aparece tanto na aba do painel
-  quanto nas mensagens que o cliente recebe no WhatsApp.
-- **🧰 Cadastro de Serviços**: os tipos de serviço que o estabelecimento oferece (ex: troca de tela,
-  formatação), cada um com nome, descrição opcional e preço opcional. É essa lista que aparece para
-  o cliente escolher ao "Solicitar manutenção" pelo WhatsApp. Além dos serviços cadastrados, o bot
-  sempre oferece a opção **"Não sei o problema (fazer uma análise)"** e, em seguida, pede ao cliente
-  uma **breve descrição do problema** (ex: "caiu água", "não liga") — que fica registrada no pedido.
-- **📋 Pedidos e Agendamentos**: uma lista só, mais recente primeiro, com tudo que os clientes
-  pediram pelo WhatsApp — compras de produtos e solicitações de manutenção — cada linha marcada como
-  🛍️ Produto ou 🔧 Serviço. Atualize o status conforme o andamento
-  (produtos: `Pendente`/`Pago`/`Cancelado`/`Concluído`; serviços: `Em análise`/`Em manutenção`/
-  `Aguardando peça`/`Concluído`). Ao mudar o status de um serviço, **o bot avisa o cliente na hora
-  pelo WhatsApp** (ver "Notificações proativas" abaixo). A coluna **Entregue?** marca que o cliente
-  já buscou o aparelho — marque-a quando ele retirar, para parar os lembretes de retirada.
-  Clicando no **protocolo (📄)** de um serviço abre a **Ordem de Serviço**: mostra o problema
-  relatado pelo cliente, um campo de **laudo técnico** (o que foi identificado/executado, que o
-  técnico vai preenchendo) e um botão **🖨️ Imprimir OS** que gera uma folha pronta para impressão
-  (nome, data, protocolo, aparelho, problema, laudo, valor e espaço para assinaturas).
-- **Configurações**: dados do estabelecimento, chave PIX (e nome/cidade do recebedor, exigidos
-  pelo padrão do PIX Copia e Cola) e o plano (`basico` ou `profissional`).
-
-## Notificações proativas (avisos automáticos ao cliente)
-
-Além de responder quando o cliente escreve, o bot **toma a iniciativa** em dois momentos — o que
-reduz a enxurrada de "tá pronto?" e os aparelhos esquecidos na loja:
-
-1. **Mudança de status**: quando o dono muda o status de um serviço no painel, o cliente recebe na
-   hora uma mensagem (ex: *"Seu aparelho está pronto para retirada! 🎉"*). Só dispara quando o
-   status realmente muda, para não mandar mensagem repetida.
-2. **Lembrete de retirada**: serviços marcados como "Concluído" que o cliente ainda não buscou
-   recebem um lembrete automático (por padrão em 2 e 5 dias após a conclusão). Assim que o dono
-   marca a coluna **Entregue?**, os lembretes param.
-
-Configuração no `.env` (todas opcionais, com padrões sensatos):
-
-| Variável | Padrão | O que faz |
-|---|---|---|
-| `NOTIFICACOES_PROATIVAS` | `true` | Interruptor geral. `false` desliga todos os avisos automáticos. |
-| `LEMBRETE_RETIRADA_DIAS` | `2,5` | Dias após a conclusão para os lembretes (a quantidade de números define quantos lembretes). |
-| `AGENDADOR_INTERVALO_MIN` | `60` | De quantos em quantos minutos o sistema verifica se há lembretes a enviar. |
-
-> ⚠️ Mensagens proativas aumentam o volume de envios saindo do número. Como o `whatsapp-web.js` é
-> não-oficial, disparos em excesso elevam o risco de bloqueio — por isso os lembretes são poucos e
-> espaçados por padrão. Use com bom senso e, idealmente, num número dedicado ao atendimento.
-
-## Sobre o pagamento via PIX
-
-O sistema gera o código "PIX Copia e Cola" localmente (sem gateway, sem taxa, sem cadastro em
-PSP), a partir da chave PIX cadastrada no painel. A confirmação do pagamento é **manual**: o
-cliente paga e envia o comprovante, e o dono marca o pedido como `pago` no painel. Isso mantém o
-sistema 100% gratuito. Se no futuro for necessário confirmar pagamentos automaticamente, dá para
-integrar um PSP com webhook (ex: Mercado Pago, Efí) sem mudar o restante do fluxo.
-
-## Sobre o Plano Profissional (IA)
-
-Usa a API gratuita da Groq (compatível com o formato OpenAI), com o modelo `llama-3.3-70b-versatile`
-por padrão (configurável via `GROQ_MODEL`). O modelo recebe o cardápio atualizado a cada mensagem
-e pode registrar um pedido chamando uma ferramenta interna — o código do PIX nunca passa pela IA,
-é sempre gerado e enviado literalmente pelo backend, para não haver risco de o código ser
-reescrito/corrompido pelo modelo.
-
-## Deploy — por que não uma PaaS gratuita (Render/Railway/Heroku)?
-
-O `whatsapp-web.js` depende de duas coisas que planos gratuitos de PaaS normalmente não garantem:
-
-1. **Um processo Chromium sempre ativo** — planos free costumam hibernar o serviço após
-   inatividade, o que derruba a conexão do WhatsApp.
-2. **Disco persistente** para a pasta `sessions/` — sem isso, a cada novo deploy/restart o
-   WhatsApp pede para escanear o QR Code de novo.
-
-Por isso, para rodar 24 horas de verdade e de graça, a recomendação é:
-
-- **Um computador ou mini-PC próprio, sempre ligado** (a opção realmente gratuita). Instalando via
-  [Docker](#instalação-rápida-com-docker-recomendado), o próprio `restart: unless-stopped` do
-  `docker-compose.yml` já cuida de reiniciar sozinho — não precisa de PM2. Se instalar pela via
-  manual (sem Docker), use o [PM2](https://pm2.keymetrics.io/):
-  ```
-  npm install -g pm2
-  pm2 start index.js --name gaspy-botzap
-  pm2 save
-  pm2 startup
-  ```
-- Alternativa de baixo custo (não gratuita, mas muito barata) se não houver uma máquina disponível:
-  uma VPS simples (ex: ~R$20-30/mês) com disco persistente, rodando com Docker ou PM2 da mesma
-  forma.
-
-## Estrutura do projeto
-
-```
-index.js                    # ponto de entrada: sobe o bot + o painel
-src/bot/                    # cliente WhatsApp e roteamento de mensagens
-src/flows/                  # máquina de estados do Plano Básico (menus, pedido/cardápio, manutenção, status)
-src/ai/                     # atendimento com IA do Plano Profissional (Groq)
-src/pix/                    # geração do PIX Copia e Cola (BR Code)
-src/database/               # conexão SQLite, schema e repositórios
-painel/                     # painel web (Express + HTML/CSS/JS puro)
-clients/exemplo.json        # modelo (salão/comida) — não é mais o padrão, fica de referência
-clients/teccell.json        # dado inicial padrão (assistência técnica), usado no primeiro seed
-data/gaspy.db               # banco SQLite (criado automaticamente)
-Dockerfile                  # imagem do bot+painel (build em 2 etapas, Chromium do sistema)
-docker-compose.yml          # sobe o container com volumes persistentes (sessions/, data/)
-.dockerignore               # o que não entra na imagem (node_modules, .env, etc.)
-install.sh / install.ps1    # instalação em um comando (Linux/Mac e Windows), sem Node.js/Git
-portatil/                   # gera o pacote portátil Windows (empacotar.ps1) + iniciar.bat e helpers
-```
-
-## Scripts
-
-- `npm start` — inicia o bot e o painel.
-- `npm run dev` — mesmo que `start`, com reinício automático (nodemon) ao editar arquivos.
-- `npm run seed` — roda o seed manualmente (normalmente automático na primeira execução).
-- `node ver-agendamentos.js` — lista no terminal os agendamentos/pedidos registrados.
-
-## Expansão para múltiplos estabelecimentos (multi-tenant)
-
-A base já está pronta para isso: todas as tabelas (`cardapio_itens`, `pedidos`,
-`servicos_agendados`, `servicos_catalogo`, `sessoes`, `mensagens_log`) são segmentadas por
-`estabelecimento_id`. Para atender mais de um estabelecimento, hoje é necessário rodar um processo Node por estabelecimento
-(cada `whatsapp-web.js` só controla um número de WhatsApp), cada um com seu próprio `CLIENT_ID` e
-`SESSION_PATH` no `.env`. Um painel central único e um "gerenciador" de múltiplos processos ficam
-como próxima evolução natural.
-
-### Criando uma nova loja/estabelecimento
-
-Cada estabelecimento tem um arquivo `clients/<client_id>.json` (ex: `clients/teccell.json`) usado
-**apenas na primeira execução**, para semear o banco daquela instalação. Para uma nova loja:
-
-1. Copie um dos arquivos existentes (`clients/exemplo.json` para fluxo de menu com agendamento tipo
-   salão, `clients/teccell.json` para fluxo de manutenção com protocolo tipo assistência técnica)
-   como `clients/<novo_id>.json`.
-2. Ajuste `nome_empresa`, `saudacao`, `menu_principal` (as ações disponíveis são: `mensagem`,
-   `submenu`, `coletar_dados`, `cardapio`, `manutencao`, `consultar_status` e `transferir`), o
-   `rotulo_catalogo` (o nome que a seção de produtos vai ter para esse tipo de negócio) e, se for
-   usar o fluxo de manutenção, o array `servicos_catalogo` (lista de `{ nome, descricao, preco }`
-   com os tipos de serviço já cadastrados de cara).
-3. No `.env` daquela instalação, defina `CLIENT_ID=<novo_id>`.
-4. Rode `npm start` — o restante (chave PIX, produtos, serviços, horários) é configurado depois
-   direto pelo painel, sem precisar editar o JSON de novo.
+Há ainda a instalação via **Docker** (um comando), explicada em
+[`docs/DETALHES-TECNICOS.md`](docs/DETALHES-TECNICOS.md).
