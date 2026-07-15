@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "painel",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["painel/server.js"],
+      "port": 3902,
+      "autoPort": true
+    },
+    {
+      "name": "lendas-da-mata",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Users\\nutriz\\Documents\\claude teste\\server.js"],
+      "port": 5178
+    }
+  ]
+}

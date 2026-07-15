@@ -1,245 +1,410 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Painel do Estabelecimento — Gaspy BOTZAP</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<div id="tela-setup" class="tela oculto">
-  <div class="card-login">
-    <span class="emoji-grande">🔐</span>
-    <h1>Bem-vindo! Crie a senha do painel</h1>
-    <p>Este é o primeiro acesso. Defina uma senha para proteger o painel do seu estabelecimento.</p>
-    <input type="password" id="input-nova-senha" placeholder="Crie uma senha (mín. 4 caracteres)">
-    <input type="password" id="input-confirma-senha" placeholder="Repita a senha">
-    <button id="btn-criar-senha" class="botao-primario">Criar senha e entrar</button>
-    <p id="erro-setup" class="erro"></p>
-  </div>
-</div>
-
-<div id="tela-login" class="tela oculto">
-  <div class="card-login">
-    <span class="emoji-grande">🤖</span>
-    <h1>Painel do Estabelecimento</h1>
-    <p>Informe a senha de acesso do painel para entrar.</p>
-    <input type="password" id="input-senha" placeholder="Digite a senha do painel">
-    <button id="btn-entrar" class="botao-primario">Entrar</button>
-    <p id="erro-login" class="erro"></p>
-  </div>
-</div>
-
-<div id="tela-app" class="tela oculto">
-  <header>
-    <div class="marca">
-      <span class="emoji">🤖</span>
-      <div class="marca-texto">
-        <strong>Gaspy BOTZAP</strong>
-        <span id="nome-estabelecimento-header">Painel do estabelecimento</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Painel do Estabelecimento — Gaspy BOTZAP</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="tela-setup" class="tela oculto">
+      <div class="card-login">
+        <span class="emoji-grande">🔐</span>
+        <h1>Bem-vindo! Crie a senha do painel</h1>
+        <p>
+          Este é o primeiro acesso. Defina uma senha para proteger o painel do
+          seu estabelecimento.
+        </p>
+        <input
+          type="password"
+          id="input-nova-senha"
+          placeholder="Crie uma senha (mín. 4 caracteres)"
+        />
+        <input
+          type="password"
+          id="input-confirma-senha"
+          placeholder="Repita a senha"
+        />
+        <button id="btn-criar-senha" class="botao-primario">
+          Criar senha e entrar
+        </button>
+        <p id="erro-setup" class="erro"></p>
       </div>
     </div>
-    <nav>
-      <button class="aba-btn ativo" data-aba="cardapio" id="btn-aba-cardapio">🍽️ Cardápio</button>
-      <button class="aba-btn" data-aba="servicos-catalogo">🧰 Cadastro de Serviços</button>
-      <button class="aba-btn" data-aba="atendimentos">📋 Pedidos e Agendamentos</button>
-      <button class="aba-btn" data-aba="config">⚙️ Configurações</button>
-    </nav>
-    <button id="btn-sair" class="botao-sair">Sair</button>
-  </header>
 
-  <main>
-    <section id="aba-cardapio" class="aba">
-      <div class="aba-cabecalho">
-        <h2 id="titulo-cardapio">Cardápio</h2>
-        <p class="ajuda">Adicione, edite o preço e controle a disponibilidade dos seus itens. As mudanças aparecem na hora para quem conversa com o bot.</p>
+    <div id="tela-login" class="tela oculto">
+      <div class="card-login">
+        <span class="emoji-grande logo-emoji-grande"
+          ><span class="logo-g">G</span></span
+        >
+
+        <h1>Painel do Estabelecimento</h1>
+        <p>Informe a senha de acesso do painel para entrar.</p>
+        <input
+          type="password"
+          id="input-senha"
+          placeholder="Digite a senha do painel"
+        />
+        <button id="btn-entrar" class="botao-primario">Entrar</button>
+        <p id="erro-login" class="erro"></p>
       </div>
-
-      <div class="painel-novo-item">
-        <p class="rotulo-form">➕ Adicionar novo item</p>
-        <form id="form-novo-item" class="form-linha">
-          <div class="campo-flutuante">
-            <label for="campo-categoria">Categoria</label>
-            <input id="campo-categoria" type="text" name="categoria" placeholder="Ex: Capinhas" required>
-          </div>
-          <div class="campo-flutuante">
-            <label for="campo-nome">Nome do item</label>
-            <input id="campo-nome" type="text" name="nome" placeholder="Ex: Capinha iPhone 13" required>
-          </div>
-          <div class="campo-flutuante">
-            <label for="campo-descricao">Descrição (opcional)</label>
-            <input id="campo-descricao" type="text" name="descricao" placeholder="Detalhes do item">
-          </div>
-          <div class="campo-flutuante">
-            <label for="campo-preco">Preço (R$)</label>
-            <input id="campo-preco" type="number" name="preco" placeholder="0,00" step="0.01" min="0" required>
-          </div>
-          <div class="campo-flutuante">
-            <label for="campo-estoque">Estoque (opcional)</label>
-            <input id="campo-estoque" type="number" name="estoque" placeholder="Sem limite" min="0">
-          </div>
-          <button type="submit" class="botao-primario">+ Adicionar</button>
-        </form>
-      </div>
-
-      <div class="tabela-wrap">
-        <table id="tabela-cardapio">
-          <thead>
-            <tr><th>Categoria</th><th>Nome</th><th>Descrição</th><th>Preço (R$)</th><th>Estoque</th><th>Disponível</th><th></th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="aba-servicos-catalogo" class="aba oculto">
-      <div class="aba-cabecalho">
-        <h2>🧰 Cadastro de Serviços</h2>
-        <p class="ajuda">Tipos de serviço que sua assistência técnica oferece (ex: troca de tela, formatação). O cliente escolhe um deles ao pedir manutenção pelo WhatsApp.</p>
-      </div>
-
-      <div class="painel-novo-item">
-        <p class="rotulo-form">➕ Adicionar novo serviço</p>
-        <form id="form-novo-servico" class="form-linha">
-          <div class="campo-flutuante">
-            <label for="campo-servico-nome">Nome do serviço</label>
-            <input id="campo-servico-nome" type="text" name="nome" placeholder="Ex: Troca de tela" required>
-          </div>
-          <div class="campo-flutuante">
-            <label for="campo-servico-descricao">Descrição (opcional)</label>
-            <input id="campo-servico-descricao" type="text" name="descricao" placeholder="Detalhes do serviço">
-          </div>
-          <div class="campo-flutuante">
-            <label for="campo-servico-preco">Preço (R$)</label>
-            <input id="campo-servico-preco" type="number" name="preco" placeholder="Sem valor fixo" step="0.01" min="0">
-          </div>
-          <button type="submit" class="botao-primario">+ Adicionar</button>
-        </form>
-      </div>
-
-      <div class="tabela-wrap">
-        <table id="tabela-servicos-catalogo">
-          <thead>
-            <tr><th>Nome</th><th>Descrição</th><th>Preço (R$)</th><th>Disponível</th><th></th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="aba-atendimentos" class="aba oculto">
-      <div class="aba-cabecalho">
-        <h2>📋 Pedidos e Agendamentos</h2>
-        <p class="ajuda">Tudo que os clientes pediram pelo WhatsApp — compras da loja e solicitações de manutenção — numa lista só, da mais recente para a mais antiga.</p>
-      </div>
-      <div class="tabela-wrap">
-        <table id="tabela-atendimentos">
-          <thead>
-            <tr><th>Tipo</th><th>#</th><th>Cliente</th><th>Telefone</th><th>Descrição</th><th>Valor (R$)</th><th>Status</th><th>Entregue?</th><th>Data</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="aba-config" class="aba oculto">
-      <div class="aba-cabecalho">
-        <h2>⚙️ Configurações do estabelecimento</h2>
-        <p class="ajuda">Esses dados controlam o que o bot fala com o cliente no WhatsApp.</p>
-      </div>
-      <form id="form-config" class="form-config">
-        <fieldset>
-          <legend>Identidade</legend>
-          <label>Nome do estabelecimento
-            <input type="text" name="nome">
-          </label>
-          <label>Saudação inicial <small>(primeira mensagem que o cliente recebe)</small>
-            <textarea name="saudacao" rows="3"></textarea>
-          </label>
-          <label>Nome da seção de itens <small>aparece no painel e no WhatsApp — ex: "🍽️ Cardápio", "🛍️ Loja de Acessórios", "📦 Produtos"</small>
-            <input type="text" name="rotulo_catalogo">
-          </label>
-        </fieldset>
-
-        <fieldset>
-          <legend>Atendimento</legend>
-          <label>Número do atendente <small>com DDI, ex: 5511999999999</small>
-            <input type="text" name="numero_atendente">
-          </label>
-          <label>Horário de atendimento
-            <input type="text" name="horario_atendimento">
-          </label>
-          <label>Mensagem fora do horário
-            <textarea name="mensagem_fora_horario" rows="2"></textarea>
-          </label>
-          <label>Mensagem de encerramento
-            <input type="text" name="mensagem_encerramento">
-          </label>
-        </fieldset>
-
-        <fieldset>
-          <legend>Pagamento via PIX</legend>
-          <label>Chave PIX
-            <input type="text" name="chave_pix" placeholder="Telefone, e-mail, CPF/CNPJ ou chave aleatória">
-          </label>
-          <label>Nome do recebedor
-            <input type="text" name="pix_nome_recebedor">
-          </label>
-          <label>Cidade do recebedor
-            <input type="text" name="pix_cidade">
-          </label>
-        </fieldset>
-
-        <fieldset>
-          <legend>Plano</legend>
-          <label>Tipo de atendimento
-            <select name="plano">
-              <option value="basico">Básico — menus pré-configurados</option>
-              <option value="profissional">Profissional — atendimento com IA</option>
-            </select>
-          </label>
-        </fieldset>
-
-        <button type="submit" class="botao-primario form-config-botao">Salvar configurações</button>
-        <p id="config-salvo" class="sucesso oculto">✅ Salvo com sucesso!</p>
-      </form>
-    </section>
-  </main>
-</div>
-
-<!-- Modal da Ordem de Serviço (aberto pelo botão "OS" de cada serviço) -->
-<div id="modal-os" class="modal-overlay oculto">
-  <div class="modal-card">
-    <button id="modal-os-fechar" class="modal-fechar" title="Fechar">✕</button>
-    <h2>📄 Ordem de Serviço <span id="os-protocolo"></span></h2>
-
-    <div class="os-info">
-      <p><strong>Cliente:</strong> <span id="os-cliente"></span></p>
-      <p><strong>Telefone:</strong> <span id="os-telefone"></span></p>
-      <p><strong>Aparelho:</strong> <span id="os-aparelho"></span></p>
-      <p><strong>Serviço:</strong> <span id="os-servico"></span></p>
-      <p><strong>Valor:</strong> <span id="os-valor"></span></p>
-      <p><strong>Status:</strong> <span id="os-status"></span></p>
-      <p><strong>Aberto em:</strong> <span id="os-data"></span></p>
     </div>
 
-    <label class="os-campo">Problema relatado pelo cliente
-      <textarea id="os-problema" rows="2" readonly></textarea>
-    </label>
+    <div id="tela-app" class="tela oculto">
+      <header>
+        <div class="marca">
+          <span class="emoji"><span class="logo-g">G</span></span>
 
-    <label class="os-campo">Laudo técnico / serviços executados
-      <textarea id="os-laudo" rows="5" placeholder="Descreva o que foi identificado e o que foi feito..."></textarea>
-    </label>
+          <div class="marca-texto">
+            <strong>Gaspy BOTZAP</strong>
+            <span id="nome-estabelecimento-header"
+              >Painel do estabelecimento</span
+            >
+          </div>
+        </div>
+        <nav>
+          <button
+            class="aba-btn ativo"
+            data-aba="cardapio"
+            id="btn-aba-cardapio"
+          >
+            🍽️ Cardápio
+          </button>
+          <button class="aba-btn" data-aba="servicos-catalogo">
+            🧰 Cadastro de Serviços
+          </button>
+          <button class="aba-btn" data-aba="atendimentos">
+            📋 Pedidos e Agendamentos
+          </button>
+          <button class="aba-btn" data-aba="config">⚙️ Configurações</button>
+        </nav>
+        <button id="btn-sair" class="botao-sair">Sair</button>
+      </header>
 
-    <div class="modal-acoes">
-      <button id="btn-salvar-laudo" class="botao-primario">Salvar laudo</button>
-      <button id="btn-imprimir-os" class="botao-secundario">🖨️ Imprimir OS</button>
-      <span id="laudo-salvo" class="sucesso oculto">✅ Laudo salvo!</span>
+      <main>
+        <section id="aba-cardapio" class="aba">
+          <div class="aba-cabecalho">
+            <h2 id="titulo-cardapio">Cardápio</h2>
+            <p class="ajuda">
+              Adicione, edite o preço e controle a disponibilidade dos seus
+              itens. As mudanças aparecem na hora para quem conversa com o bot.
+            </p>
+          </div>
+
+          <div class="painel-novo-item">
+            <p class="rotulo-form">➕ Adicionar novo item</p>
+            <form id="form-novo-item" class="form-linha">
+              <div class="campo-flutuante">
+                <label for="campo-categoria">Categoria</label>
+                <input
+                  id="campo-categoria"
+                  type="text"
+                  name="categoria"
+                  placeholder="Ex: Capinhas"
+                  required
+                />
+              </div>
+              <div class="campo-flutuante">
+                <label for="campo-nome">Nome do item</label>
+                <input
+                  id="campo-nome"
+                  type="text"
+                  name="nome"
+                  placeholder="Ex: Capinha iPhone 13"
+                  required
+                />
+              </div>
+              <div class="campo-flutuante">
+                <label for="campo-descricao">Descrição (opcional)</label>
+                <input
+                  id="campo-descricao"
+                  type="text"
+                  name="descricao"
+                  placeholder="Detalhes do item"
+                />
+              </div>
+              <div class="campo-flutuante">
+                <label for="campo-preco">Preço (R$)</label>
+                <input
+                  id="campo-preco"
+                  type="number"
+                  name="preco"
+                  placeholder="0,00"
+                  step="0.01"
+                  min="0"
+                  required
+                />
+              </div>
+              <div class="campo-flutuante">
+                <label for="campo-estoque">Estoque (opcional)</label>
+                <input
+                  id="campo-estoque"
+                  type="number"
+                  name="estoque"
+                  placeholder="Sem limite"
+                  min="0"
+                />
+              </div>
+              <button type="submit" class="botao-primario">+ Adicionar</button>
+            </form>
+          </div>
+
+          <div class="tabela-wrap">
+            <table id="tabela-cardapio">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th>Nome</th>
+                  <th>Descrição</th>
+                  <th>Preço (R$)</th>
+                  <th>Estoque</th>
+                  <th>Disponível</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="aba-servicos-catalogo" class="aba oculto">
+          <div class="aba-cabecalho">
+            <h2>🧰 Cadastro de Serviços</h2>
+            <p class="ajuda">
+              Tipos de serviço que sua assistência técnica oferece (ex: troca de
+              tela, formatação). O cliente escolhe um deles ao pedir manutenção
+              pelo WhatsApp.
+            </p>
+          </div>
+
+          <div class="painel-novo-item">
+            <p class="rotulo-form">➕ Adicionar novo serviço</p>
+            <form id="form-novo-servico" class="form-linha">
+              <div class="campo-flutuante">
+                <label for="campo-servico-nome">Nome do serviço</label>
+                <input
+                  id="campo-servico-nome"
+                  type="text"
+                  name="nome"
+                  placeholder="Ex: Troca de tela"
+                  required
+                />
+              </div>
+              <div class="campo-flutuante">
+                <label for="campo-servico-descricao"
+                  >Descrição (opcional)</label
+                >
+                <input
+                  id="campo-servico-descricao"
+                  type="text"
+                  name="descricao"
+                  placeholder="Detalhes do serviço"
+                />
+              </div>
+              <div class="campo-flutuante">
+                <label for="campo-servico-preco">Preço (R$)</label>
+                <input
+                  id="campo-servico-preco"
+                  type="number"
+                  name="preco"
+                  placeholder="Sem valor fixo"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+              <button type="submit" class="botao-primario">+ Adicionar</button>
+            </form>
+          </div>
+
+          <div class="tabela-wrap">
+            <table id="tabela-servicos-catalogo">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Descrição</th>
+                  <th>Preço (R$)</th>
+                  <th>Disponível</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="aba-atendimentos" class="aba oculto">
+          <div class="aba-cabecalho">
+            <h2>📋 Pedidos e Agendamentos</h2>
+            <p class="ajuda">
+              Tudo que os clientes pediram pelo WhatsApp — compras da loja e
+              solicitações de manutenção — numa lista só, da mais recente para a
+              mais antiga.
+            </p>
+          </div>
+          <div class="tabela-wrap">
+            <table id="tabela-atendimentos">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>#</th>
+                  <th>Cliente</th>
+                  <th>Telefone</th>
+                  <th>Descrição</th>
+                  <th>Valor (R$)</th>
+                  <th>Status</th>
+                  <th>Entregue?</th>
+                  <th>Data</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="aba-config" class="aba oculto">
+          <div class="aba-cabecalho">
+            <h2>⚙️ Configurações do estabelecimento</h2>
+            <p class="ajuda">
+              Esses dados controlam o que o bot fala com o cliente no WhatsApp.
+            </p>
+          </div>
+          <form id="form-config" class="form-config">
+            <fieldset>
+              <legend>Identidade</legend>
+              <label
+                >Nome do estabelecimento
+                <input type="text" name="nome" />
+              </label>
+              <label
+                >Saudação inicial
+                <small>(primeira mensagem que o cliente recebe)</small>
+                <textarea name="saudacao" rows="3"></textarea>
+              </label>
+              <label
+                >Nome da seção de itens
+                <small
+                  >aparece no painel e no WhatsApp — ex: "🍽️ Cardápio", "🛍️ Loja
+                  de Acessórios", "📦 Produtos"</small
+                >
+                <input type="text" name="rotulo_catalogo" />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Atendimento</legend>
+              <label
+                >Número do atendente <small>com DDI, ex: 5511999999999</small>
+                <input type="text" name="numero_atendente" />
+              </label>
+              <label
+                >Horário de atendimento
+                <input type="text" name="horario_atendimento" />
+              </label>
+              <label
+                >Mensagem fora do horário
+                <textarea name="mensagem_fora_horario" rows="2"></textarea>
+              </label>
+              <label
+                >Mensagem de encerramento
+                <input type="text" name="mensagem_encerramento" />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Pagamento via PIX</legend>
+              <label
+                >Chave PIX
+                <input
+                  type="text"
+                  name="chave_pix"
+                  placeholder="Telefone, e-mail, CPF/CNPJ ou chave aleatória"
+                />
+              </label>
+              <label
+                >Nome do recebedor
+                <input type="text" name="pix_nome_recebedor" />
+              </label>
+              <label
+                >Cidade do recebedor
+                <input type="text" name="pix_cidade" />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Plano</legend>
+              <label
+                >Tipo de atendimento
+                <select name="plano">
+                  <option value="basico">
+                    Básico — menus pré-configurados
+                  </option>
+                  <option value="profissional">
+                    Profissional — atendimento com IA
+                  </option>
+                </select>
+              </label>
+            </fieldset>
+
+            <button type="submit" class="botao-primario form-config-botao">
+              Salvar configurações
+            </button>
+            <p id="config-salvo" class="sucesso oculto">
+              ✅ Salvo com sucesso!
+            </p>
+          </form>
+        </section>
+      </main>
     </div>
-  </div>
-</div>
 
-<script src="app.js"></script>
-</body>
+    <!-- Modal da Ordem de Serviço (aberto pelo botão "OS" de cada serviço) -->
+    <div id="modal-os" class="modal-overlay oculto">
+      <div class="modal-card">
+        <button id="modal-os-fechar" class="modal-fechar" title="Fechar">
+          ✕
+        </button>
+        <h2>📄 Ordem de Serviço <span id="os-protocolo"></span></h2>
+
+        <div class="os-info">
+          <p><strong>Cliente:</strong> <span id="os-cliente"></span></p>
+          <p><strong>Telefone:</strong> <span id="os-telefone"></span></p>
+          <p><strong>Aparelho:</strong> <span id="os-aparelho"></span></p>
+          <p><strong>Serviço:</strong> <span id="os-servico"></span></p>
+          <p><strong>Valor:</strong> <span id="os-valor"></span></p>
+          <p><strong>Status:</strong> <span id="os-status"></span></p>
+          <p><strong>Aberto em:</strong> <span id="os-data"></span></p>
+        </div>
+
+        <label class="os-campo"
+          >Problema relatado pelo cliente
+          <textarea id="os-problema" rows="2" readonly></textarea>
+        </label>
+
+        <label class="os-campo"
+          >Laudo técnico / serviços executados
+          <textarea
+            id="os-laudo"
+            rows="5"
+            placeholder="Descreva o que foi identificado e o que foi feito..."
+          ></textarea>
+        </label>
+
+        <div class="modal-acoes">
+          <button id="btn-salvar-laudo" class="botao-primario">
+            Salvar laudo
+          </button>
+          <button id="btn-imprimir-os" class="botao-secundario">
+            🖨️ Imprimir OS
+          </button>
+          <span id="laudo-salvo" class="sucesso oculto">✅ Laudo salvo!</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
 </html>
