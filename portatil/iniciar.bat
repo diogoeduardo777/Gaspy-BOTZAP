@@ -2,7 +2,7 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 
-rem === Configuração básica. A SENHA do painel é criada no primeiro acesso, pela própria tela. ===
+rem === Config basica. A SENHA do painel e criada no primeiro acesso, pela propria tela. ===
 set "CLIENT_ID=teccell"
 set "DATA_PATH=.\data"
 set "SESSION_PATH=.\sessions"
