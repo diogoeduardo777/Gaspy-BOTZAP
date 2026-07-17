@@ -59,6 +59,7 @@ function mostrarTelaApp() {
   carregarCardapio();
   carregarServicosCatalogo();
   carregarAtendimentos();
+  carregarMensagens();
   carregarConfig();
 }
 
@@ -428,6 +429,132 @@ function imprimirOS(os, laudo) {
   janela.print();
 }
 
+// ---------- Mensagens do bot ----------
+
+async function carregarMensagens() {
+  const { catalogo, valores } = await chamarApi('/api/mensagens');
+  const container = document.getElementById('lista-mensagens');
+  container.innerHTML = '';
+
+  catalogo.forEach((grupo) => {
+    const fs = document.createElement('fieldset');
+    fs.className = 'form-config grupo-mensagens';
+    let html = `<legend>${esc(grupo.grupo)}</legend>`;
+    grupo.itens.forEach((item) => {
+      const valor = valores[item.chave] || '';
+      const varsHint = item.variaveis && item.variaveis.length
+        ? `<small class="vars">Variáveis: ${item.variaveis.map((v) => `<code>{${esc(v)}}</code>`).join(' ')}</small>`
+        : '';
+      const campo = item.multilinha
+        ? `<textarea class="campo-mensagem" data-chave="${esc(item.chave)}" rows="3" placeholder="${esc(item.padrao)}">${esc(valor)}</textarea>`
+        : `<input type="text" class="campo-mensagem" data-chave="${esc(item.chave)}" placeholder="${esc(item.padrao)}" value="${esc(valor)}">`;
+      html += `
+        <label>${esc(item.rotulo)} ${item.ajuda ? `<small>${esc(item.ajuda)}</small>` : ''}
+          ${campo}
+          <span class="linha-vars">${varsHint}<button type="button" class="link-restaurar" data-chave="${esc(item.chave)}">restaurar padrão</button></span>
+        </label>`;
+    });
+    fs.innerHTML = html;
+    container.appendChild(fs);
+  });
+
+  // "Restaurar padrão" = limpa o campo (assim volta a usar o texto padrão).
+  container.querySelectorAll('.link-restaurar').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const campo = container.querySelector(`.campo-mensagem[data-chave="${btn.dataset.chave}"]`);
+      if (campo) campo.value = '';
+    });
+  });
+}
+
+document.getElementById('btn-salvar-mensagens').addEventListener('click', async () => {
+  const mensagens = {};
+  document.querySelectorAll('#lista-mensagens .campo-mensagem').forEach((campo) => {
+    mensagens[campo.dataset.chave] = campo.value;
+  });
+  await chamarApi('/api/mensagens', { method: 'PUT', body: JSON.stringify({ mensagens }) });
+  const aviso = document.getElementById('mensagens-salvo');
+  aviso.classList.remove('oculto');
+  setTimeout(() => aviso.classList.add('oculto'), 2000);
+});
+
+// ---------- Aparência (logo + cor) ----------
+
+function hexParaRgb(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+  if (!m) return null;
+  return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+}
+
+function escurecer(hex, fator) {
+  const c = hexParaRgb(hex);
+  if (!c) return hex;
+  const d = (v) => Math.max(0, Math.round(v * (1 - fator)));
+  return `#${[d(c.r), d(c.g), d(c.b)].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function aplicarCorDestaque(hex) {
+  const c = hexParaRgb(hex);
+  if (!c) return;
+  // Injeta/atualiza uma regra :root — recálculo de estilo mais confiável que setar a variável
+  // inline (funciona em qualquer navegador).
+  let estilo = document.getElementById('gaspy-cor-destaque');
+  if (!estilo) {
+    estilo = document.createElement('style');
+    estilo.id = 'gaspy-cor-destaque';
+    document.head.appendChild(estilo);
+  }
+  estilo.textContent = `:root{` +
+    `--azul:${hex};` +
+    `--azul-hover:${escurecer(hex, 0.14)};` +
+    `--azul-glow:rgba(${c.r},${c.g},${c.b},0.30);` +
+    `--azul-suave:rgba(${c.r},${c.g},${c.b},0.14);` +
+  `}`;
+}
+
+function aplicarLogoHeader(dataUrl) {
+  const marca = document.querySelector('.marca .emoji');
+  if (!marca) return;
+  if (dataUrl) {
+    marca.innerHTML = `<img src="${dataUrl}" alt="logo" style="width:100%;height:100%;object-fit:contain;border-radius:8px">`;
+  } else {
+    marca.textContent = '🤖';
+  }
+}
+
+let logoSelecionado = null; // data URL do logo escolhido mas ainda não salvo
+
+document.getElementById('input-logo').addEventListener('change', (evento) => {
+  const arquivo = evento.target.files && evento.target.files[0];
+  if (!arquivo) return;
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    logoSelecionado = leitor.result;
+    const prev = document.getElementById('preview-logo');
+    prev.src = logoSelecionado;
+    prev.style.display = 'block';
+  };
+  leitor.readAsDataURL(arquivo);
+});
+
+document.getElementById('btn-remover-logo').addEventListener('click', () => {
+  logoSelecionado = '';
+  document.getElementById('preview-logo').style.display = 'none';
+  document.getElementById('input-logo').value = '';
+});
+
+document.getElementById('btn-salvar-visual').addEventListener('click', async () => {
+  const cor = document.getElementById('input-cor').value;
+  const corpo = { cor_destaque: cor };
+  if (logoSelecionado !== null) corpo.logo_data_url = logoSelecionado; // '' = remover
+  const atualizado = await chamarApi('/api/visual', { method: 'PUT', body: JSON.stringify(corpo) });
+  aplicarCorDestaque(atualizado.cor_destaque);
+  aplicarLogoHeader(atualizado.logo_data_url);
+  const aviso = document.getElementById('visual-salvo');
+  aviso.classList.remove('oculto');
+  setTimeout(() => aviso.classList.add('oculto'), 2000);
+});
+
 // ---------- Configurações ----------
 
 async function carregarConfig() {
@@ -439,6 +566,21 @@ async function carregarConfig() {
   });
   aplicarRotuloCatalogo(config.rotulo_catalogo);
   aplicarNomeEstabelecimento(config.nome);
+
+  // Aparência salva
+  if (config.cor_destaque) {
+    aplicarCorDestaque(config.cor_destaque);
+    document.getElementById('input-cor').value = config.cor_destaque;
+  }
+  logoSelecionado = null;
+  const prev = document.getElementById('preview-logo');
+  if (config.logo_data_url) {
+    aplicarLogoHeader(config.logo_data_url);
+    prev.src = config.logo_data_url;
+    prev.style.display = 'block';
+  } else {
+    prev.style.display = 'none';
+  }
 }
 
 // O nome dessa seção é configurável (ex: "Cardápio" para um salão, "Loja de Acessórios" para uma

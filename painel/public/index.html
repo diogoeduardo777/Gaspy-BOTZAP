@@ -81,6 +81,7 @@
           <button class="aba-btn" data-aba="atendimentos">
             📋 Pedidos e Agendamentos
           </button>
+          <button class="aba-btn" data-aba="mensagens">💬 Mensagens</button>
           <button class="aba-btn" data-aba="config">⚙️ Configurações</button>
         </nav>
         <button id="btn-sair" class="botao-sair">Sair</button>
@@ -266,6 +267,22 @@
           </div>
         </section>
 
+        <section id="aba-mensagens" class="aba oculto">
+          <div class="aba-cabecalho">
+            <h2>💬 Mensagens do bot</h2>
+            <p class="ajuda">
+              Personalize o que o bot fala com o cliente. Deixe um campo em
+              branco para usar o texto padrão (mostrado em cinza). Use as
+              variáveis indicadas (ex: <code>{loja}</code>, <code>{cliente}</code>) que o bot troca sozinho.
+            </p>
+          </div>
+          <div id="lista-mensagens"></div>
+          <div class="modal-acoes" style="margin-top: 18px">
+            <button id="btn-salvar-mensagens" class="botao-primario">Salvar mensagens</button>
+            <span id="mensagens-salvo" class="sucesso oculto">✅ Mensagens salvas!</span>
+          </div>
+        </section>
+
         <section id="aba-config" class="aba oculto">
           <div class="aba-cabecalho">
             <h2>⚙️ Configurações do estabelecimento</h2>
@@ -273,6 +290,23 @@
               Esses dados controlam o que o bot fala com o cliente no WhatsApp.
             </p>
           </div>
+
+          <fieldset class="form-config" style="max-width: 620px; margin-bottom: 20px">
+            <legend>Aparência do painel</legend>
+            <label>Logo do estabelecimento <small>(imagem PNG ou JPG, de preferência pequena)</small>
+              <input type="file" id="input-logo" accept="image/png,image/jpeg,image/webp" />
+            </label>
+            <img id="preview-logo" alt="Prévia do logo" style="max-height: 60px; align-self: flex-start; border-radius: 8px; display: none" />
+            <label>Cor de destaque do painel
+              <input type="color" id="input-cor" value="#4f8cff" style="width: 60px; height: 38px; padding: 2px" />
+            </label>
+            <div class="modal-acoes">
+              <button id="btn-salvar-visual" class="botao-primario">Salvar aparência</button>
+              <button id="btn-remover-logo" class="botao-secundario">Remover logo</button>
+              <span id="visual-salvo" class="sucesso oculto">✅ Aparência salva!</span>
+            </div>
+          </fieldset>
+
           <form id="form-config" class="form-config">
             <fieldset>
               <legend>Identidade</legend>

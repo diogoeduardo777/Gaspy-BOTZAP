@@ -9,6 +9,7 @@ const pedidosRepo = require('../src/database/pedidosRepo');
 const servicosRepo = require('../src/database/servicosRepo');
 const servicosCatalogoRepo = require('../src/database/servicosCatalogoRepo');
 const { formatarProtocolo } = require('../src/flows/manutencaoFlow');
+const { CATALOGO } = require('../src/config/textos');
 const notificador = require('../src/bot/notificador');
 
 const PAINEL_SENHA = process.env.PAINEL_SENHA;
@@ -138,6 +139,30 @@ function criarApp() {
   app.put('/api/config', autenticar, (req, res) => {
     const config = estabelecimentoAtual();
     const atualizado = estabelecimentoRepo.atualizarConfig(config.id, req.body || {});
+    res.json(paraConfigApi(atualizado));
+  });
+
+  // Personalização das MENSAGENS do bot: catálogo (com padrões e variáveis) + o que o dono já
+  // alterou. O painel usa isso para montar o formulário.
+  app.get('/api/mensagens', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    res.json({ catalogo: CATALOGO, valores: config.mensagens || {} });
+  });
+
+  app.put('/api/mensagens', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    const atualizado = estabelecimentoRepo.atualizarMensagens(config.id, (req.body && req.body.mensagens) || {});
+    res.json({ ok: true, valores: atualizado.mensagens });
+  });
+
+  // Personalização VISUAL do painel: logo (data URL) e cor de destaque (hex).
+  app.put('/api/visual', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    const { logo_data_url, cor_destaque } = req.body || {};
+    if (logo_data_url && String(logo_data_url).length > 700000) {
+      return res.status(400).json({ erro: 'A imagem do logo é muito grande. Use uma imagem menor (até ~500 KB).' });
+    }
+    const atualizado = estabelecimentoRepo.atualizarVisual(config.id, { logo_data_url, cor_destaque });
     res.json(paraConfigApi(atualizado));
   });
 
@@ -352,7 +377,9 @@ function paraConfigApi(config) {
     pix_nome_recebedor: config.pix_nome_recebedor,
     pix_cidade: config.pix_cidade,
     plano: config.plano,
-    rotulo_catalogo: config.rotulo_catalogo
+    rotulo_catalogo: config.rotulo_catalogo,
+    logo_data_url: config.logo_data_url || '',
+    cor_destaque: config.cor_destaque || ''
   };
 }
 
