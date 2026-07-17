@@ -4,17 +4,25 @@ const servicosRepo = require('../database/servicosRepo');
 const sessoesRepo = require('../database/sessoesRepo');
 const { formatarProtocolo } = require('./manutencaoFlow');
 const { formatarPreco } = require('../utils/formatador');
+const { resolverTexto } = require('../config/textos');
 
-const MENSAGENS_STATUS = {
-  em_analise: 'Sua solicitação está em análise.',
-  em_manutencao: 'Seu aparelho está em manutenção.',
-  aguardando_peca: 'Estamos aguardando peça para continuar o serviço.',
-  concluido: 'Seu serviço foi concluído, pronto para retirada! 🎉'
+// Mapa do status (valor no banco) para a chave do texto personalizável correspondente.
+const CHAVE_STATUS = {
+  em_analise: 'status_em_analise',
+  em_manutencao: 'status_em_manutencao',
+  aguardando_peca: 'status_aguardando_peca',
+  concluido: 'status_concluido'
 };
+
+// Frase amigável (personalizável) para um status. Usada aqui e no notificador (avisos proativos).
+function fraseStatus(config, status) {
+  const chave = CHAVE_STATUS[status];
+  return chave ? resolverTexto(config, chave) : status;
+}
 
 function iniciarConsultaStatus(telefone, config) {
   sessoesRepo.salvarSessao(config.id, telefone, 'consultando_status', {});
-  return 'Para consultar o status, me informe o *número de protocolo* (ex: #0001) ou o seu *nome completo*:';
+  return resolverTexto(config, 'status_pedir');
 }
 
 function processarConsulta(telefone, texto, config) {
@@ -32,14 +40,13 @@ function processarConsulta(telefone, texto, config) {
   }
 
   if (servicos.length === 0) {
-    return 'Não encontrei nenhum serviço com essas informações. Confira o protocolo ou o nome e tente novamente, ou digite *menu* para voltar.';
+    return resolverTexto(config, 'status_nao_encontrado');
   }
 
-  return servicos.slice(0, 3).map(montarMensagemStatus).join('\n\n') + '\n\n_Digite *menu* para voltar ao início._';
+  return servicos.slice(0, 3).map((s) => montarMensagemStatus(s, config)).join('\n\n') + '\n\n_Digite *menu* para voltar ao início._';
 }
 
-function montarMensagemStatus(registro) {
-  const mensagem = MENSAGENS_STATUS[registro.status] || registro.status;
+function montarMensagemStatus(registro, config) {
   let texto =
     `🔖 *Protocolo:* ${formatarProtocolo(registro.id)}\n` +
     `📱 *Aparelho:* ${registro.aparelho}\n` +
@@ -47,8 +54,8 @@ function montarMensagemStatus(registro) {
   if (registro.preco_centavos !== null && registro.preco_centavos !== undefined) {
     texto += `💰 *Valor estimado:* ${formatarPreco(registro.preco_centavos)}\n`;
   }
-  texto += `📋 *Status:* ${mensagem}`;
+  texto += `📋 *Status:* ${fraseStatus(config, registro.status)}`;
   return texto;
 }
 
-module.exports = { iniciarConsultaStatus, processarConsulta, MENSAGENS_STATUS };
+module.exports = { iniciarConsultaStatus, processarConsulta, fraseStatus, CHAVE_STATUS };

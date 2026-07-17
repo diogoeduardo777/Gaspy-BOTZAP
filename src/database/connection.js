@@ -27,6 +27,15 @@ if (!colunasEstabelecimentos.includes('rotulo_catalogo')) {
 if (!colunasEstabelecimentos.includes('painel_senha_hash')) {
   db.exec('ALTER TABLE estabelecimentos ADD COLUMN painel_senha_hash TEXT');
 }
+if (!colunasEstabelecimentos.includes('logo_data_url')) {
+  db.exec("ALTER TABLE estabelecimentos ADD COLUMN logo_data_url TEXT NOT NULL DEFAULT ''");
+}
+if (!colunasEstabelecimentos.includes('cor_destaque')) {
+  db.exec("ALTER TABLE estabelecimentos ADD COLUMN cor_destaque TEXT NOT NULL DEFAULT ''");
+}
+if (!colunasEstabelecimentos.includes('mensagens_json')) {
+  db.exec("ALTER TABLE estabelecimentos ADD COLUMN mensagens_json TEXT NOT NULL DEFAULT '{}'");
+}
 
 const colunasServicosAgendados = db.prepare("PRAGMA table_info(servicos_agendados)").all().map((c) => c.name);
 if (!colunasServicosAgendados.includes('preco_centavos')) {

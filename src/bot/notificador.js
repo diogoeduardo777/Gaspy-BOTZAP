@@ -1,8 +1,9 @@
 // "Modo proativo": envia mensagens ao cliente por iniciativa da loja (não em resposta a uma
 // mensagem recebida). Guarda a referência do client do WhatsApp e é usado tanto pelo painel
 // (quando o dono muda o status de um serviço) quanto pelo agendador (lembrete de retirada).
-const { MENSAGENS_STATUS } = require('../flows/statusFlow');
+const { resolverTexto } = require('../config/textos');
 const { formatarProtocolo } = require('../flows/manutencaoFlow');
+const { fraseStatus } = require('../flows/statusFlow');
 
 let client = null;
 let pronto = false;
@@ -39,34 +40,25 @@ async function enviarMensagem(telefone, texto) {
   }
 }
 
-function montarMensagemStatus(servico, nomeEmpresa) {
-  const statusTexto = MENSAGENS_STATUS[servico.status] || servico.status;
-  return (
-    `🔧 *${nomeEmpresa}* — atualização do seu aparelho\n\n` +
-    `🔖 Protocolo: ${formatarProtocolo(servico.id)}\n` +
-    `📱 Aparelho: ${servico.aparelho}\n` +
-    `🔧 Serviço: ${servico.servico}\n\n` +
-    `📋 ${statusTexto}`
-  );
-}
-
-async function notificarStatusServico(servico, nomeEmpresa) {
+async function notificarStatusServico(servico, config) {
   if (!servico || !servico.telefone) return false;
-  return enviarMensagem(servico.telefone, montarMensagemStatus(servico, nomeEmpresa));
+  const texto = resolverTexto(config, 'aviso_status', {
+    protocolo: formatarProtocolo(servico.id),
+    aparelho: servico.aparelho,
+    servico: servico.servico,
+    status: fraseStatus(config, servico.status)
+  });
+  return enviarMensagem(servico.telefone, texto);
 }
 
-function montarMensagemLembrete(servico, nomeEmpresa) {
-  return (
-    `🔔 *${nomeEmpresa}* — seu aparelho está te esperando!\n\n` +
-    `🔖 Protocolo: ${formatarProtocolo(servico.id)}\n` +
-    `📱 ${servico.aparelho} (${servico.servico})\n\n` +
-    `Seu aparelho já está *pronto para retirada*. Pode passar aqui para buscar! 😊`
-  );
-}
-
-async function notificarLembreteRetirada(servico, nomeEmpresa) {
+async function notificarLembreteRetirada(servico, config) {
   if (!servico || !servico.telefone) return false;
-  return enviarMensagem(servico.telefone, montarMensagemLembrete(servico, nomeEmpresa));
+  const texto = resolverTexto(config, 'aviso_lembrete', {
+    protocolo: formatarProtocolo(servico.id),
+    aparelho: servico.aparelho,
+    servico: servico.servico
+  });
+  return enviarMensagem(servico.telefone, texto);
 }
 
 module.exports = {

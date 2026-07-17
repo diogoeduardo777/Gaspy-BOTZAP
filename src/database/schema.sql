@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS estabelecimentos (
   plano TEXT NOT NULL DEFAULT 'basico' CHECK (plano IN ('basico', 'profissional')),
   rotulo_catalogo TEXT NOT NULL DEFAULT '🍽️ Cardápio', -- nome exibido no painel e no WhatsApp para a lista de itens (ex: "🛍️ Loja de Acessórios")
   painel_senha_hash TEXT, -- hash (salt:hash) da senha do painel, criada no 1º acesso; NULL = ainda não configurada
+  logo_data_url TEXT NOT NULL DEFAULT '',   -- logo do estabelecimento (imagem embutida como data URL), exibida no painel
+  cor_destaque TEXT NOT NULL DEFAULT '',    -- cor principal do painel (hex, ex: #4f8cff); vazio = padrão
+  mensagens_json TEXT NOT NULL DEFAULT '{}', -- textos personalizados do bot (só o que o dono alterou; o resto usa o padrão)
   config_menu_json TEXT NOT NULL DEFAULT '{}',
   criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );

@@ -5,16 +5,17 @@ const servicosRepo = require('../database/servicosRepo');
 const servicosCatalogoRepo = require('../database/servicosCatalogoRepo');
 const sessoesRepo = require('../database/sessoesRepo');
 const { formatarPreco } = require('../utils/formatador');
+const { resolverTexto } = require('../config/textos');
 
 function iniciarManutencao(telefone, config) {
   sessoesRepo.salvarSessao(config.id, telefone, 'manutencao_nome', {});
-  return 'Vamos registrar sua solicitação de manutenção! 🔧\n\nQual é o seu *nome completo*?';
+  return resolverTexto(config, 'manutencao_inicio');
 }
 
 function processarNome(telefone, texto, dados, config) {
   const clienteNome = texto.trim();
   sessoesRepo.salvarSessao(config.id, telefone, 'manutencao_aparelho', { ...dados, clienteNome });
-  return 'Qual o *tipo de aparelho*? (ex: celular, notebook, PC, tablet...)';
+  return resolverTexto(config, 'manutencao_pergunta_aparelho');
 }
 
 function processarAparelho(telefone, texto, dados, config) {
@@ -28,18 +29,21 @@ const OPCAO_ANALISE = 'Análise / Diagnóstico';
 
 function montarPerguntaServico(config) {
   const servicos = servicosCatalogoRepo.listarServicos(config.id, { somenteDisponiveis: true });
+  const intro = resolverTexto(config, 'manutencao_pergunta_servico');
+  const rotuloAnalise = resolverTexto(config, 'manutencao_opcao_analise');
+
   if (servicos.length === 0) {
-    return 'Qual *serviço* você precisa? (ex: troca de tela, formatação, upgrade de SSD...)\n\nSe não souber o que é, escreva *análise* que nossa equipe identifica o problema.';
+    return `${intro}\n\nDescreva o serviço que precisa, ou escreva *análise* que nossa equipe identifica o problema.`;
   }
 
-  let texto = 'Qual serviço você precisa?\n\n';
+  let texto = `${intro}\n\n`;
   servicos.forEach((servico, index) => {
     texto += `${index + 1} — ${servico.nome}`;
     if (servico.preco_centavos !== null) texto += ` — ${formatarPreco(servico.preco_centavos)}`;
     texto += '\n';
   });
   // Opção extra sempre disponível: cliente que não sabe o problema pede uma análise.
-  texto += `${servicos.length + 1} — 🔍 Não sei o problema (fazer uma análise)\n`;
+  texto += `${servicos.length + 1} — ${rotuloAnalise}\n`;
   texto += '\nDigite o *número* da opção, ou descreva o serviço se não estiver na lista.';
   return texto;
 }
@@ -68,7 +72,7 @@ function processarServico(telefone, texto, dados, config) {
   }
 
   sessoesRepo.salvarSessao(config.id, telefone, 'manutencao_descricao', { ...dados, servico: nomeServico, precoCentavos });
-  return 'Por último, *descreva rapidamente o problema* (ex: caiu água, não liga, está lento).\n\nSe preferir, digite *pular*.';
+  return resolverTexto(config, 'manutencao_pergunta_descricao');
 }
 
 // Passo 2: guarda a descrição do problema e finaliza o registro.
@@ -104,7 +108,7 @@ function processarDescricaoEFinalizar(telefone, texto, dados, config) {
 
   resposta +=
     `📋 *Status:* Em análise\n\n` +
-    `Guarde o protocolo ${protocolo} para consultar o status depois. Digite *menu* para voltar ao início.`;
+    resolverTexto(config, 'manutencao_confirmacao_rodape', { protocolo });
 
   return resposta;
 }

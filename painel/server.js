@@ -240,7 +240,7 @@ function criarApp() {
 
     // Só notifica se o status realmente mudou (evita mensagem repetida ao cliente).
     if (anterior && anterior.status !== status) {
-      notificador.notificarStatusServico(servico, config.nome_empresa).catch(() => {});
+      notificador.notificarStatusServico(servico, config).catch(() => {});
     }
     res.json(paraServicoApi(servico));
   });

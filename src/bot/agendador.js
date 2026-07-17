@@ -37,7 +37,7 @@ async function verificarLembretes() {
 
     const limiarDias = dias[jaEnviados];
     if (diasDesde(servico.data_conclusao) >= limiarDias) {
-      const enviou = await notificador.notificarLembreteRetirada(servico, config.nome_empresa);
+      const enviou = await notificador.notificarLembreteRetirada(servico, config);
       if (enviou) servicosRepo.registrarLembreteRetirada(config.id, servico.id);
     }
   }

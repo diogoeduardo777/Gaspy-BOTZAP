@@ -5,6 +5,7 @@ const pedidosRepo = require('../database/pedidosRepo');
 const sessoesRepo = require('../database/sessoesRepo');
 const { gerarPixCopiaECola } = require('../pix/gerarPixCopiaECola');
 const { formatarPreco } = require('../utils/formatador');
+const { resolverTexto } = require('../config/textos');
 
 function iniciarPedido(telefone, config) {
   sessoesRepo.salvarSessao(config.id, telefone, 'pedido_selecionando', { carrinho: [] });
@@ -27,7 +28,7 @@ function montarMensagemCardapio(config, carrinho) {
     texto += `${index + 1} — ${item.nome} — ${formatarPreco(item.preco_centavos)}\n`;
   });
 
-  texto += `\nDigite o *número do item* para adicionar (ex: *3* ou *2x3* para 2 unidades do item 3).`;
+  texto += `\n${resolverTexto(config, 'pedido_rodape')}`;
   if (carrinho.length > 0) {
     texto += `\n\n${montarResumoCarrinho(carrinho)}`;
   }
@@ -56,7 +57,7 @@ function processarSelecao(telefone, texto, dados, config) {
       return 'Seu carrinho está vazio. Escolha ao menos um item antes de fechar o pedido.';
     }
     sessoesRepo.salvarSessao(config.id, telefone, 'pedido_aguardando_nome', { carrinho });
-    return 'Perfeito! Para finalizar, me informe seu *nome completo*:';
+    return resolverTexto(config, 'pedido_pedir_nome');
   }
 
   const match = entrada.match(/^(?:(\d+)x)?(\d+)$/);
@@ -121,7 +122,7 @@ function criarPedidoComPix(config, telefone, clienteNome, carrinho, tipo = 'pedi
       valorCentavos: totalCentavos,
       txid: pedido.pix_txid
     });
-    resposta += `\n💳 *Pagamento via PIX (Copia e Cola)* — copie o código abaixo no app do seu banco:\n${pixCopiaECola}\n\n_Após o pagamento, aguarde a confirmação do estabelecimento._`;
+    resposta += `\n${resolverTexto(config, 'pedido_pix_instrucao')}\n${pixCopiaECola}\n\n${resolverTexto(config, 'pedido_pos_pix')}`;
   } else {
     resposta += `\n_Nossa equipe vai entrar em contato para combinar o pagamento._`;
   }

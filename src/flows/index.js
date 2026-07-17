@@ -4,6 +4,7 @@ const pedidoFlow = require('./pedidoFlow');
 const manutencaoFlow = require('./manutencaoFlow');
 const statusFlow = require('./statusFlow');
 const { montarMenu, extrairOpcao } = require('../utils/formatador');
+const { resolverTexto } = require('../config/textos');
 
 async function processarMensagem(telefone, texto, config) {
   const sessao = sessoesRepo.obterSessao(config.id, telefone);
@@ -59,7 +60,7 @@ async function processarMensagem(telefone, texto, config) {
 async function exibirMenuPrincipal(telefone, config) {
   const menu = config.menu_principal;
   const texto = montarMenu(
-    `${config.saudacao}\n\n${menu.titulo}`,
+    `${resolverTexto(config, 'saudacao')}\n\n${menu.titulo}`,
     menu.opcoes
   );
   sessoesRepo.salvarSessao(config.id, telefone, 'menu_principal');
@@ -71,7 +72,7 @@ async function processarMenuPrincipal(telefone, opcao, config) {
   const item = menu.opcoes.find(o => o.numero === opcao);
 
   if (!item) {
-    return `Opção inválida. Por favor, escolha uma das opções abaixo:\n\n${montarMenu(menu.titulo, menu.opcoes)}`;
+    return `${resolverTexto(config, 'opcao_invalida')}\n\n${montarMenu(menu.titulo, menu.opcoes)}`;
   }
 
   return await executarAcao(telefone, item, config);
