@@ -24,7 +24,7 @@ function diasDesde(dataSqlite) {
 async function verificarLembretes() {
   if (!notificador.notificacoesAtivas() || !notificador.estaPronto()) return;
 
-  const clientId = process.env.CLIENT_ID || 'teccell';
+  const clientId = process.env.CLIENT_ID || 'exemplo';
   const config = estabelecimentoRepo.buscarPorClientId(clientId);
   if (!config) return;
 

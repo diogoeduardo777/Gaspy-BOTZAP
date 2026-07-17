@@ -3,14 +3,14 @@ chcp 65001 >nul
 cd /d "%~dp0"
 
 rem === Config basica. A SENHA do painel e criada no primeiro acesso, pela propria tela. ===
-set "CLIENT_ID=teccell"
+set "CLIENT_ID=meu-negocio"
 set "DATA_PATH=.\data"
 set "SESSION_PATH=.\sessions"
 set "PAINEL_PORT=3000"
 set "PUPPETEER_CACHE_DIR=%~dp0.chromium-portatil"
 
 echo ================================================
-echo   Gaspy BOTZAP - TecCell
+echo   Gaspy BOTZAP
 echo   Iniciando... NAO FECHE esta janela.
 echo   Painel: http://localhost:%PAINEL_PORT%
 echo ================================================

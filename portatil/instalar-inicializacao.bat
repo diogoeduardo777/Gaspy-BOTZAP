@@ -4,7 +4,7 @@ rem Faz o Gaspy iniciar sozinho quando este computador ligar (cria um atalho na 
 rem "Inicializar" do Windows apontando para o iniciar.bat).
 
 set "ALVO=%~dp0iniciar.bat"
-set "ATALHO=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Gaspy-TecCell.lnk"
+set "ATALHO=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Gaspy-BOTZAP.lnk"
 
 powershell -NoProfile -Command "$w = New-Object -ComObject WScript.Shell; $s = $w.CreateShortcut('%ATALHO%'); $s.TargetPath = '%ALVO%'; $s.WorkingDirectory = '%~dp0'; $s.Save()"
 

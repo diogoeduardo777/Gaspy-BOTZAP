@@ -4,10 +4,10 @@ const path = require('path');
 // Popula o banco na primeira execução usando o JSON de exemplo como dado inicial.
 // Depois disso, toda edição passa a ser feita pelo painel web (gravada no SQLite).
 function rodarSeed(db) {
-  const clientId = process.env.CLIENT_ID || 'teccell';
+  const clientId = process.env.CLIENT_ID || 'exemplo';
   let configPath = path.resolve(`./clients/${clientId}.json`);
   if (!fs.existsSync(configPath)) {
-    configPath = path.resolve('./clients/teccell.json');
+    configPath = path.resolve('./clients/exemplo.json');
   }
   if (!fs.existsSync(configPath)) {
     console.warn('⚠️  Nenhum arquivo de configuração inicial encontrado em clients/. Pulei o seed.');

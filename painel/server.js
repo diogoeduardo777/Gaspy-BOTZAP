@@ -19,7 +19,7 @@ if (PAINEL_SENHA) {
 }
 
 function clientIdAtual() {
-  return process.env.CLIENT_ID || 'teccell';
+  return process.env.CLIENT_ID || 'exemplo';
 }
 
 function estabelecimentoAtual() {

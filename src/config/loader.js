@@ -4,7 +4,7 @@ const estabelecimentoRepo = require('../database/estabelecimentoRepo');
 // JSON estático lido só na inicialização. Buscamos a cada chamada para refletir edições do painel
 // sem precisar reiniciar o bot.
 function carregarConfig() {
-  const clientId = process.env.CLIENT_ID || 'teccell';
+  const clientId = process.env.CLIENT_ID || 'exemplo';
   const config = estabelecimentoRepo.buscarPorClientId(clientId);
 
   if (!config) {

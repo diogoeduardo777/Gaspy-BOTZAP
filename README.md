@@ -1,10 +1,13 @@
-# Gaspy BOTZAP — Guia de instalação na TecCell
+# Gaspy BOTZAP — Guia de instalação
 
-Este guia é o **passo a passo prático** para colocar o sistema rodando no computador da loja, com
-tudo funcionando: **WhatsApp**, **banco de dados** e **impressão da ordem de serviço**.
+Este guia é o **passo a passo prático** para colocar o sistema rodando no computador do
+estabelecimento, com tudo funcionando: **WhatsApp**, **banco de dados** e **impressão da ordem de
+serviço**.
 
 O sistema é um atendente automático de WhatsApp + um painel web onde o dono gerencia produtos,
-serviços, pedidos e ordens de serviço. Roda **no computador da própria loja** (não é na nuvem).
+serviços, pedidos e ordens de serviço. Roda **no computador do próprio estabelecimento** (não é na
+nuvem). Ele já vem **genérico**: no primeiro acesso ao painel, o dono personaliza nome, logo, cor,
+mensagens do bot, produtos e serviços — sem editar nenhum arquivo.
 
 > 📚 Detalhes técnicos, outras formas de instalar (Docker/npm), PIX, IA e multi-tenant estão em
 > [`docs/DETALHES-TECNICOS.md`](docs/DETALHES-TECNICOS.md).
@@ -33,7 +36,7 @@ Isso é feito **no seu computador** (que tem o projeto e o Node.js), não no da 
    ```powershell
    powershell -ExecutionPolicy Bypass -File portatil\empacotar.ps1
    ```
-3. No fim, será criado o arquivo **`dist\Gaspy-TecCell-portatil.zip`**.
+3. No fim, será criado o arquivo **`dist\Gaspy-BOTZAP-portatil.zip`**.
 
 Esse `.zip` já vem com **tudo dentro** (o programa, o Node embutido e o navegador interno do bot).
 A loja **não precisa instalar nada** — nem Node.js, nem Docker, nem Git.
@@ -44,10 +47,10 @@ A loja **não precisa instalar nada** — nem Node.js, nem Docker, nem Git.
 
 ---
 
-## Parte 2 — Instalar no computador da TecCell
+## Parte 2 — Instalar no computador do estabelecimento
 
 1. **Leve o `.zip`** para o computador da loja (pendrive, Google Drive, WhatsApp Web, etc.).
-2. **Descompacte** numa pasta simples, tipo `C:\Gaspy-TecCell`.
+2. **Descompacte** numa pasta simples, tipo `C:\Gaspy-BOTZAP`.
    (Evite deixar dentro de "Downloads" ou numa pasta de rede.)
 3. Abra a pasta e dê **duplo clique em `iniciar.bat`**.
    - Se o Windows mostrar uma tela azul (SmartScreen), clique em **"Mais informações"** →

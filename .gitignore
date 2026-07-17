@@ -7,3 +7,5 @@ data/
 .env
 dist/
 .chromium-portatil/
+.wwebjs_cache/
+.wwebjs_auth/

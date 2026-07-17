@@ -10,7 +10,7 @@
 $ErrorActionPreference = 'Stop'
 
 $raiz = Split-Path -Parent $PSScriptRoot   # a pasta portatil/ fica dentro do projeto
-$nomePacote = 'Gaspy-TecCell-portatil'
+$nomePacote = 'Gaspy-BOTZAP-portatil'
 $saida = Join-Path $raiz 'dist'
 $destino = Join-Path $saida $nomePacote
 $cacheChromium = Join-Path $raiz '.chromium-portatil'
