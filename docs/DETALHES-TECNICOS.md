@@ -21,7 +21,8 @@ do WhatsApp Web, sem custo por conversa), SQLite (banco embutido, sem servidor) 
 - Os dados (cardápio/produtos, configurações, pedidos, serviços agendados com protocolo, sessões de
   conversa, logs) ficam em `data/gaspy.db` (SQLite).
 - Na primeira execução, se o banco estiver vazio, o sistema semeia automaticamente um
-  estabelecimento a partir de `clients/<CLIENT_ID>.json` (padrão: `clients/teccell.json`).
+  estabelecimento a partir de `clients/<CLIENT_ID>.json` (com fallback para o modelo neutro
+  `clients/exemplo.json`). Depois disso, tudo é personalizado pelo painel.
 
 ## Formas de instalar (resumo)
 
@@ -42,7 +43,7 @@ Aqui a loja **não instala nada** — nem Node.js, nem Docker. Você gera um `.z
 ```powershell
 powershell -ExecutionPolicy Bypass -File portatil\empacotar.ps1
 ```
-Isso gera `dist\Gaspy-TecCell-portatil.zip` já com o Node embutido, as dependências e o Chromium
+Isso gera `dist\Gaspy-BOTZAP-portatil.zip` já com o Node embutido, as dependências e o Chromium
 lá dentro.
 
 **A loja:**
@@ -145,15 +146,14 @@ Alternativa para quem já tem Node.js instalado ou quer rodar em modo de desenvo
 Nas próximas vezes, `npm start` reconecta a sessão salva em `sessions/` sem precisar escanear o QR
 de novo — desde que a pasta não seja apagada.
 
-## Guia rápido: instalar em um novo computador (ex: loja TecCell)
+## Guia rápido: instalar em um novo computador
 
 Cada estabelecimento roda seu **próprio processo**, com seu **próprio número de WhatsApp**, no
 computador do próprio estabelecimento.
 
 **Caminho mais simples:** rode o comando da seção [Instalação rápida com Docker](#instalação-rápida-com-docker-recomendado)
 no computador da loja — ele já baixa o projeto e sobe tudo sozinho, sem precisar instalar Node.js
-ou Git. Só depois disso, ajuste o `.env` (`CLIENT_ID=teccell`, `PAINEL_SENHA`) e rode
-`docker compose up -d --build` de novo para aplicar.
+ou Git. Depois é só abrir o painel e personalizar (nome, mensagens, cores, produtos e serviços).
 
 O passo a passo abaixo é a via manual (sem Docker), para quem preferir ou não puder instalar Docker
 no computador da loja:
@@ -184,27 +184,23 @@ Abra o terminal (PowerShell) dentro da pasta do projeto e rode:
 npm install
 ```
 
-### 4. Configurar o `.env` para a TecCell
+### 4. Configurar o `.env`
 
 ```
 copy .env.example .env
 ```
-Abra o `.env` num editor de texto e ajuste:
-```
-CLIENT_ID=teccell
-PAINEL_SENHA=escolha-uma-senha-seguranca
-```
-Deixe `GROQ_API_KEY` em branco por enquanto (a TecCell começa no Plano Básico, sem IA — dá para
-ativar depois pelo painel, bastando preencher essa chave e trocar o plano).
+O `.env` já vem pronto para uso — a senha do painel é criada no primeiro acesso. Deixe
+`GROQ_API_KEY` em branco por enquanto (o estabelecimento começa no Plano Básico, sem IA — dá para
+ativar depois pelo painel, preenchendo essa chave e trocando o plano).
 
 ### 5. Rodar e conectar o WhatsApp da loja
 
 ```
 npm start
 ```
-Na primeira execução, o sistema cria o banco `data/gaspy.db` e semeia automaticamente o
-estabelecimento "TecCell" a partir de `clients/teccell.json` (menu com as 4 opções: Solicitar
-manutenção, Consultar status, Loja de acessórios, Falar com atendente).
+Na primeira execução, o sistema cria o banco `data/gaspy.db` e semeia automaticamente um
+estabelecimento neutro a partir de `clients/exemplo.json` (menu com 4 opções: Solicitar serviço,
+Consultar status, Ver produtos, Falar com atendente). Tudo isso é personalizável depois no painel.
 
 Escaneie o QR Code exibido no terminal com o **WhatsApp da loja** (Aparelhos conectados → Conectar
 um aparelho).
@@ -343,8 +339,8 @@ src/ai/                     # atendimento com IA do Plano Profissional (Groq)
 src/pix/                    # geração do PIX Copia e Cola (BR Code)
 src/database/               # conexão SQLite, schema e repositórios
 painel/                     # painel web (Express + HTML/CSS/JS puro)
-clients/exemplo.json        # modelo (salão/comida) — não é mais o padrão, fica de referência
-clients/teccell.json        # dado inicial padrão (assistência técnica), usado no primeiro seed
+src/config/textos.js        # catálogo das mensagens personalizáveis do bot (+ resolverTexto)
+clients/exemplo.json        # modelo NEUTRO usado no primeiro seed (personalizado depois no painel)
 data/gaspy.db               # banco SQLite (criado automaticamente)
 Dockerfile                  # imagem do bot+painel (build em 2 etapas, Chromium do sistema)
 docker-compose.yml          # sobe o container com volumes persistentes (sessions/, data/)
@@ -371,12 +367,13 @@ como próxima evolução natural.
 
 ### Criando uma nova loja/estabelecimento
 
-Cada estabelecimento tem um arquivo `clients/<client_id>.json` (ex: `clients/teccell.json`) usado
-**apenas na primeira execução**, para semear o banco daquela instalação. Para uma nova loja:
+Na maioria dos casos **não precisa editar arquivo**: instale, abra o painel e personalize tudo
+(nome, logo, cor, mensagens, produtos e serviços). O modelo neutro `clients/exemplo.json` é usado
+só no primeiro seed.
 
-1. Copie um dos arquivos existentes (`clients/exemplo.json` para fluxo de menu com agendamento tipo
-   salão, `clients/teccell.json` para fluxo de manutenção com protocolo tipo assistência técnica)
-   como `clients/<novo_id>.json`.
+Se quiser um ponto de partida já pré-preenchido para um novo `CLIENT_ID` (opcional):
+
+1. Copie `clients/exemplo.json` para `clients/<novo_id>.json`.
 2. Ajuste `nome_empresa`, `saudacao`, `menu_principal` (as ações disponíveis são: `mensagem`,
    `submenu`, `coletar_dados`, `cardapio`, `manutencao`, `consultar_status` e `transferir`), o
    `rotulo_catalogo` (o nome que a seção de produtos vai ter para esse tipo de negócio) e, se for
