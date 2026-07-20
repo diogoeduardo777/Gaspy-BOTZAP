@@ -10,6 +10,7 @@ const servicosRepo = require('../src/database/servicosRepo');
 const servicosCatalogoRepo = require('../src/database/servicosCatalogoRepo');
 const { formatarProtocolo } = require('../src/flows/manutencaoFlow');
 const { CATALOGO } = require('../src/config/textos');
+const backup = require('../src/database/backup');
 const notificador = require('../src/bot/notificador');
 
 const PAINEL_SENHA = process.env.PAINEL_SENHA;
@@ -153,6 +154,21 @@ function criarApp() {
     const config = estabelecimentoAtual();
     const atualizado = estabelecimentoRepo.atualizarMensagens(config.id, (req.body && req.body.mensagens) || {});
     res.json({ ok: true, valores: atualizado.mensagens });
+  });
+
+  // Gera uma cópia de segurança na hora e envia para download (o dono guarda num pendrive/nuvem).
+  app.get('/api/backup/download', autenticar, async (req, res) => {
+    const os = require('os');
+    const tmp = path.join(os.tmpdir(), backup.nomeBackup());
+    try {
+      await backup.fazerBackup(tmp);
+      res.download(tmp, backup.nomeBackup(), (err) => {
+        try { require('fs').rmSync(tmp, { force: true }); } catch {}
+        if (err) console.error('[backup] erro no download:', err.message);
+      });
+    } catch (err) {
+      res.status(500).json({ erro: 'Não foi possível gerar o backup: ' + err.message });
+    }
   });
 
   // Personalização VISUAL do painel: logo (data URL) e cor de destaque (hex).

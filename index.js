@@ -6,6 +6,7 @@ const { carregarConfig } = require('./src/config/loader');
 const { iniciarPainel } = require('./painel/server');
 const notificador = require('./src/bot/notificador');
 const { iniciarAgendador } = require('./src/bot/agendador');
+const { iniciarBackupAutomatico } = require('./src/database/backup');
 
 const MAX_TENTATIVAS_WHATSAPP = 5;
 const ESPERA_RECONEXAO_MS = 8000;
@@ -106,6 +107,7 @@ async function main() {
   // o dono continua acessando pedidos, ordens de serviço e cadastros.
   iniciarPainel();
   iniciarAgendador();
+  iniciarBackupAutomatico();
 
   await conectarWhatsApp();
 }

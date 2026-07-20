@@ -431,39 +431,99 @@ function imprimirOS(os, laudo) {
 
 // ---------- Mensagens do bot ----------
 
+// Marca o campo como "Personalizado" (tem texto) ou "Padrão" (vazio = usa o texto padrão).
+function atualizarSelo(campo) {
+  const bloco = campo.closest('.msg-item');
+  if (!bloco) return;
+  const selo = bloco.querySelector('.msg-selo');
+  const personalizado = campo.value.trim() !== '';
+  selo.textContent = personalizado ? 'Personalizado' : 'Padrão';
+  selo.classList.toggle('personalizado', personalizado);
+}
+
 async function carregarMensagens() {
   const { catalogo, valores } = await chamarApi('/api/mensagens');
   const container = document.getElementById('lista-mensagens');
   container.innerHTML = '';
 
-  catalogo.forEach((grupo) => {
-    const fs = document.createElement('fieldset');
-    fs.className = 'form-config grupo-mensagens';
-    let html = `<legend>${esc(grupo.grupo)}</legend>`;
+  catalogo.forEach((grupo, indiceGrupo) => {
+    // Conta quantos textos deste grupo já foram personalizados (aparece no cabeçalho).
+    const qtdPersonalizados = grupo.itens.filter((i) => (valores[i.chave] || '').trim() !== '').length;
+
+    const bloco = document.createElement('div');
+    bloco.className = 'acordeao-grupo';
+
+    let itensHtml = '';
     grupo.itens.forEach((item) => {
       const valor = valores[item.chave] || '';
-      const varsHint = item.variaveis && item.variaveis.length
-        ? `<small class="vars">Variáveis: ${item.variaveis.map((v) => `<code>{${esc(v)}}</code>`).join(' ')}</small>`
+      const personalizado = valor.trim() !== '';
+      const chips = (item.variaveis || []).map((v) =>
+        `<button type="button" class="chip-var" data-var="${esc(v)}">{${esc(v)}}</button>`
+      ).join(' ');
+      const chipsLinha = chips
+        ? `<div class="msg-vars"><span class="msg-vars-titulo">Toque para inserir:</span> ${chips}</div>`
         : '';
       const campo = item.multilinha
         ? `<textarea class="campo-mensagem" data-chave="${esc(item.chave)}" rows="3" placeholder="${esc(item.padrao)}">${esc(valor)}</textarea>`
         : `<input type="text" class="campo-mensagem" data-chave="${esc(item.chave)}" placeholder="${esc(item.padrao)}" value="${esc(valor)}">`;
-      html += `
-        <label>${esc(item.rotulo)} ${item.ajuda ? `<small>${esc(item.ajuda)}</small>` : ''}
+
+      itensHtml += `
+        <div class="msg-item">
+          <div class="msg-topo">
+            <strong>${esc(item.rotulo)}</strong>
+            <span class="msg-selo ${personalizado ? 'personalizado' : ''}">${personalizado ? 'Personalizado' : 'Padrão'}</span>
+          </div>
+          ${item.ajuda ? `<p class="msg-ajuda">${esc(item.ajuda)}</p>` : ''}
           ${campo}
-          <span class="linha-vars">${varsHint}<button type="button" class="link-restaurar" data-chave="${esc(item.chave)}">restaurar padrão</button></span>
-        </label>`;
+          ${chipsLinha}
+          <button type="button" class="link-restaurar" data-chave="${esc(item.chave)}">↺ voltar ao texto padrão</button>
+        </div>`;
     });
-    fs.innerHTML = html;
-    container.appendChild(fs);
+
+    bloco.innerHTML = `
+      <button type="button" class="acordeao-cabecalho">
+        <span>${esc(grupo.grupo)}</span>
+        <span class="acordeao-info">${qtdPersonalizados > 0 ? `${qtdPersonalizados} personalizado(s)` : ''} <span class="acordeao-seta">▾</span></span>
+      </button>
+      <div class="acordeao-corpo">${itensHtml}</div>`;
+    container.appendChild(bloco);
+
+    // Primeiro grupo já aberto; os demais fechados.
+    if (indiceGrupo === 0) bloco.classList.add('aberto');
   });
 
-  // "Restaurar padrão" = limpa o campo (assim volta a usar o texto padrão).
+  // Abre/fecha o grupo ao clicar no cabeçalho.
+  container.querySelectorAll('.acordeao-cabecalho').forEach((cab) => {
+    cab.addEventListener('click', () => cab.closest('.acordeao-grupo').classList.toggle('aberto'));
+  });
+
+  // Clicar numa variável insere {var} no texto (na posição do cursor).
+  container.querySelectorAll('.chip-var').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const campo = chip.closest('.msg-item').querySelector('.campo-mensagem');
+      const token = `{${chip.dataset.var}}`;
+      const ini = campo.selectionStart != null ? campo.selectionStart : campo.value.length;
+      const fim = campo.selectionEnd != null ? campo.selectionEnd : campo.value.length;
+      campo.value = campo.value.slice(0, ini) + token + campo.value.slice(fim);
+      campo.focus();
+      const pos = ini + token.length;
+      try { campo.setSelectionRange(pos, pos); } catch {}
+      atualizarSelo(campo);
+    });
+  });
+
+  // "Voltar ao texto padrão" = limpa o campo.
   container.querySelectorAll('.link-restaurar').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const campo = container.querySelector(`.campo-mensagem[data-chave="${btn.dataset.chave}"]`);
-      if (campo) campo.value = '';
+      const campo = btn.closest('.msg-item').querySelector('.campo-mensagem');
+      campo.value = '';
+      atualizarSelo(campo);
     });
+  });
+
+  // Atualiza o selo (Padrão/Personalizado) enquanto o dono digita.
+  container.querySelectorAll('.campo-mensagem').forEach((campo) => {
+    campo.addEventListener('input', () => atualizarSelo(campo));
   });
 }
 
@@ -535,6 +595,34 @@ document.getElementById('input-logo').addEventListener('change', (evento) => {
     prev.style.display = 'block';
   };
   leitor.readAsDataURL(arquivo);
+});
+
+document.getElementById('btn-baixar-backup').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-baixar-backup');
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Gerando cópia...';
+  try {
+    const resp = await fetch('/api/backup/download', { headers: { 'x-painel-senha': senhaAtual() } });
+    if (!resp.ok) throw new Error('Falha ao gerar backup');
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gaspy-backup.db';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    const aviso = document.getElementById('backup-baixado');
+    aviso.classList.remove('oculto');
+    setTimeout(() => aviso.classList.add('oculto'), 2500);
+  } catch (e) {
+    alert('Não consegui gerar o backup agora. Tente novamente.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+  }
 });
 
 document.getElementById('btn-remover-logo').addEventListener('click', () => {

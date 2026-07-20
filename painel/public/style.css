@@ -578,22 +578,61 @@ button.abrir-os:hover {
   align-self: flex-start;
 }
 
-/* ---------- Aba Mensagens ---------- */
+/* ---------- Aba Mensagens (acordeão) ---------- */
 
-.grupo-mensagens { max-width: 720px; margin-bottom: 18px; }
-.grupo-mensagens .linha-vars {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 2px;
+#lista-mensagens { max-width: 760px; display: flex; flex-direction: column; gap: 10px; }
+
+.acordeao-grupo { border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; background: var(--bg-elev-2); }
+
+.acordeao-cabecalho {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: transparent; border: none; cursor: pointer; padding: 14px 16px;
+  color: var(--texto); font-size: 0.98em; font-weight: 700; text-align: left;
 }
-.grupo-mensagens .vars { color: var(--texto-suave); font-weight: 400; }
-.grupo-mensagens code {
-  background: var(--bg); border: 1px solid var(--borda); padding: 1px 5px; border-radius: 5px;
-  color: var(--azul); font-size: 0.88em;
+.acordeao-cabecalho:hover { background: var(--bg); }
+.acordeao-info { display: flex; align-items: center; gap: 10px; font-size: 0.8em; font-weight: 600; color: var(--azul); }
+.acordeao-seta { transition: transform 0.15s ease; color: var(--texto-suave); }
+.acordeao-grupo.aberto .acordeao-seta { transform: rotate(180deg); }
+
+.acordeao-corpo { display: none; padding: 4px 16px 16px; flex-direction: column; gap: 16px; }
+.acordeao-grupo.aberto .acordeao-corpo { display: flex; }
+
+.msg-item { display: flex; flex-direction: column; gap: 6px; }
+.msg-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.msg-topo strong { font-size: 0.92em; }
+.msg-selo {
+  font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 2px 8px; border-radius: 999px; background: var(--borda); color: var(--texto-suave);
 }
+.msg-selo.personalizado { background: var(--azul-suave); color: var(--azul); }
+.msg-ajuda { margin: 0; font-size: 0.82em; color: var(--texto-suave); }
+
+.msg-item textarea, .msg-item input[type="text"] {
+  padding: 10px 12px; border: 1px solid var(--borda-forte); border-radius: 9px; font-family: inherit;
+  font-size: 0.95em; background: var(--bg); color: var(--texto); resize: vertical;
+}
+.msg-item textarea::placeholder, .msg-item input::placeholder { color: var(--texto-fraco); }
+.msg-item textarea:focus, .msg-item input:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 3px var(--azul-glow); }
+
+.msg-vars { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.msg-vars-titulo { font-size: 0.78em; color: var(--texto-suave); }
+.chip-var {
+  background: var(--bg); border: 1px solid var(--borda-forte); color: var(--azul);
+  border-radius: 999px; padding: 3px 9px; font-size: 0.8em; font-weight: 600; cursor: pointer;
+}
+.chip-var:hover { background: var(--azul-suave); border-color: var(--azul); }
+
 .link-restaurar {
-  background: none; border: none; color: var(--azul); cursor: pointer; font-size: 0.82em;
-  font-weight: 600; padding: 0; text-decoration: underline;
+  align-self: flex-start; background: none; border: none; color: var(--texto-suave); cursor: pointer;
+  font-size: 0.8em; font-weight: 600; padding: 0;
 }
-.link-restaurar:hover { color: var(--azul-hover); }
+.link-restaurar:hover { color: var(--azul); }
+
+.barra-salvar {
+  position: sticky; bottom: 0; margin-top: 16px; padding: 14px 0;
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(to top, var(--bg-elev) 60%, transparent);
+}
 
 /* ---------- Modal da Ordem de Serviço ---------- */
 

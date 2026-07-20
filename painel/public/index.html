@@ -271,15 +271,15 @@
           <div class="aba-cabecalho">
             <h2>💬 Mensagens do bot</h2>
             <p class="ajuda">
-              Personalize o que o bot fala com o cliente. Deixe um campo em
-              branco para usar o texto padrão (mostrado em cinza). Use as
-              variáveis indicadas (ex: <code>{loja}</code>, <code>{cliente}</code>) que o bot troca sozinho.
+              Aqui você muda o que o bot escreve para o cliente. Clique num grupo
+              para abrir. Cada texto já funciona sozinho — <strong>só mexa no que
+              quiser mudar</strong>. Campo vazio = o bot usa o texto padrão.
             </p>
           </div>
           <div id="lista-mensagens"></div>
-          <div class="modal-acoes" style="margin-top: 18px">
+          <div class="barra-salvar">
             <button id="btn-salvar-mensagens" class="botao-primario">Salvar mensagens</button>
-            <span id="mensagens-salvo" class="sucesso oculto">✅ Mensagens salvas!</span>
+            <span id="mensagens-salvo" class="sucesso oculto">✅ Salvo!</span>
           </div>
         </section>
 
@@ -304,6 +304,20 @@
               <button id="btn-salvar-visual" class="botao-primario">Salvar aparência</button>
               <button id="btn-remover-logo" class="botao-secundario">Remover logo</button>
               <span id="visual-salvo" class="sucesso oculto">✅ Aparência salva!</span>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-config" style="max-width: 620px; margin-bottom: 20px">
+            <legend>Cópia de segurança (backup)</legend>
+            <p class="msg-ajuda">
+              O sistema salva uma cópia dos seus dados automaticamente todo dia
+              na pasta <code>backups</code>. Além disso, você pode baixar uma
+              cópia agora e guardar num pendrive ou na nuvem — é a forma mais
+              segura de nunca perder nada.
+            </p>
+            <div class="modal-acoes">
+              <button id="btn-baixar-backup" class="botao-primario">⬇️ Baixar cópia de segurança agora</button>
+              <span id="backup-baixado" class="sucesso oculto">✅ Download iniciado!</span>
             </div>
           </fieldset>
 

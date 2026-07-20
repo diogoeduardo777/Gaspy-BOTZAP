@@ -6,6 +6,7 @@ data/
 *.db-shm
 .env
 dist/
+backups/
 .chromium-portatil/
 .wwebjs_cache/
 .wwebjs_auth/

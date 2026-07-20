@@ -135,9 +135,16 @@ Pegue **outro celular** (não o da loja) e teste:
 
 ## 💾 Backup dos dados
 
-Todos os dados (pedidos, serviços, clientes, cardápio) ficam na pasta **`data`**.
-De vez em quando, **copie essa pasta** para um pendrive ou nuvem. Se o computador estragar, é só
-colar a pasta `data` numa instalação nova que tudo volta.
+Todos os dados (pedidos, serviços, clientes, produtos) ficam na pasta **`data`**. O sistema faz uma
+**cópia de segurança automática** (por padrão, 1 vez por dia) na pasta **`backups`**, guardando as
+últimas 7 cópias.
+
+Para uma cópia **fora do computador** (o mais seguro), abra o painel → aba **Configurações** →
+**"⬇️ Baixar cópia de segurança agora"** e salve o arquivo num pendrive ou na nuvem. Se o computador
+estragar, é só instalar de novo e colocar esse arquivo no lugar do `data/gaspy.db`.
+
+> Dá para ajustar a frequência e quantas cópias manter no `.env` (`BACKUP_INTERVALO_HORAS`,
+> `BACKUP_MANTER`).
 
 ---
 
