@@ -1,10 +1,34 @@
 const sessoesRepo = require('../database/sessoesRepo');
 const pedidosRepo = require('../database/pedidosRepo');
+const cardapioRepo = require('../database/cardapioRepo');
+const servicosCatalogoRepo = require('../database/servicosCatalogoRepo');
 const pedidoFlow = require('./pedidoFlow');
 const manutencaoFlow = require('./manutencaoFlow');
 const statusFlow = require('./statusFlow');
 const { montarMenu, extrairOpcao } = require('../utils/formatador');
 const { resolverTexto } = require('../config/textos');
+
+// Monta as opções REAIS do menu principal a partir do que o estabelecimento tem cadastrado hoje
+// (menu dinâmico). Lê direto do banco — sem tabela nova:
+//   - opção de produtos/cardápio (acao 'cardapio') só aparece se houver item disponível;
+//   - opção de solicitar serviço (acao 'manutencao') só aparece se houver serviço cadastrado;
+//   - as demais (consultar status, falar com atendente, mensagens fixas...) aparecem sempre.
+// Depois renumera 1..N em sequência, para não deixar "buracos" quando alguma opção some.
+// É usada TANTO para exibir o menu QUANTO para resolver o número escolhido — assim a numeração
+// mostrada e a numeração aceita são sempre iguais.
+function construirOpcoesVisiveis(config) {
+  const temItens = cardapioRepo.listarItens(config.id, { somenteDisponiveis: true }).length > 0;
+  const temServicos = servicosCatalogoRepo.listarServicos(config.id, { somenteDisponiveis: true }).length > 0;
+
+  const opcoes = (config.menu_principal && config.menu_principal.opcoes) || [];
+  const visiveis = opcoes.filter((op) => {
+    if (op.acao === 'cardapio') return temItens;
+    if (op.acao === 'manutencao') return temServicos;
+    return true;
+  });
+
+  return visiveis.map((op, i) => ({ ...op, numero: String(i + 1) }));
+}
 
 async function processarMensagem(telefone, texto, config) {
   const sessao = sessoesRepo.obterSessao(config.id, telefone);
@@ -59,20 +83,27 @@ async function processarMensagem(telefone, texto, config) {
 
 async function exibirMenuPrincipal(telefone, config) {
   const menu = config.menu_principal;
+  const opcoes = construirOpcoesVisiveis(config);
   const texto = montarMenu(
     `${resolverTexto(config, 'saudacao')}\n\n${menu.titulo}`,
-    menu.opcoes
+    opcoes
   );
   sessoesRepo.salvarSessao(config.id, telefone, 'menu_principal');
-  return texto;
+  // Retorna um objeto de menu (em vez de só o texto) para o messageHandler poder tentar enviar
+  // botões/lista nativos do WhatsApp. O `texto` já vem com o menu numerado completo — é o que
+  // aparece se os botões não renderizarem, e é o fallback puro se o envio falhar.
+  return { tipo: 'menu', texto, titulo: menu.titulo, opcoes };
 }
 
 async function processarMenuPrincipal(telefone, opcao, config) {
   const menu = config.menu_principal;
-  const item = menu.opcoes.find(o => o.numero === opcao);
+  // Resolve o número escolhido usando a MESMA numeração dinâmica exibida (não a fixa do config).
+  const opcoes = construirOpcoesVisiveis(config);
+  const item = opcoes.find(o => o.numero === opcao);
 
   if (!item) {
-    return `${resolverTexto(config, 'opcao_invalida')}\n\n${montarMenu(menu.titulo, menu.opcoes)}`;
+    const texto = `${resolverTexto(config, 'opcao_invalida')}\n\n${montarMenu(menu.titulo, opcoes)}`;
+    return { tipo: 'menu', texto, titulo: menu.titulo, opcoes };
   }
 
   return await executarAcao(telefone, item, config);
