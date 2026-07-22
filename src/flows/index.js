@@ -46,7 +46,7 @@ async function processarMensagem(telefone, texto, config) {
       return await exibirMenuPrincipal(telefone, config);
 
     case 'menu_principal':
-      return await processarMenuPrincipal(telefone, opcaoDigitada, config);
+      return await processarMenuPrincipal(telefone, opcaoDigitada, config, sessao.dados);
 
     case 'submenu':
       return await processarSubmenu(telefone, opcaoDigitada, sessao.dados.submenu_atual, config);
@@ -95,18 +95,28 @@ async function exibirMenuPrincipal(telefone, config) {
   return { tipo: 'menu', texto, titulo: menu.titulo, opcoes };
 }
 
-async function processarMenuPrincipal(telefone, opcao, config) {
-  const menu = config.menu_principal;
+// Máximo de "empurrõezinhos" antes de o bot ficar quieto (para não spammar).
+const MAX_TENTATIVAS_INVALIDAS = 2;
+
+async function processarMenuPrincipal(telefone, opcao, config, dadosSessao) {
   // Resolve o número escolhido usando a MESMA numeração dinâmica exibida (não a fixa do config).
   const opcoes = construirOpcoesVisiveis(config);
   const item = opcoes.find(o => o.numero === opcao);
 
-  if (!item) {
-    const texto = `${resolverTexto(config, 'opcao_invalida')}\n\n${montarMenu(menu.titulo, opcoes)}`;
-    return { tipo: 'menu', texto, titulo: menu.titulo, opcoes };
+  if (item) {
+    return await executarAcao(telefone, item, config);
   }
 
-  return await executarAcao(telefone, item, config);
+  // Cliente digitou algo fora das opções. Em vez de reenviar o menu inteiro toda vez (o que vira
+  // spam se ele fica conversando), damos um empurrãozinho curto nas primeiras vezes e, se ele
+  // continuar fora das opções, o bot FICA QUIETO (retorna null = não responde). Ele reativa a
+  // qualquer momento digitando um número válido ou uma palavra de reinício ("menu", "oi"...),
+  // que zera esse contador ao mostrar o menu de novo.
+  const invalidas = ((dadosSessao && dadosSessao.invalidas) || 0) + 1;
+  sessoesRepo.salvarSessao(config.id, telefone, 'menu_principal', { invalidas });
+
+  if (invalidas > MAX_TENTATIVAS_INVALIDAS) return null; // silêncio, para não incomodar
+  return resolverTexto(config, 'opcao_invalida');
 }
 
 async function processarSubmenu(telefone, opcao, nomeSubmenu, config) {

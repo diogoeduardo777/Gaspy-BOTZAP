@@ -20,11 +20,11 @@ const CATALOGO = [
       },
       {
         chave: 'opcao_invalida',
-        rotulo: 'Opção inválida',
-        ajuda: 'Quando o cliente digita algo que não é uma opção do menu.',
+        rotulo: 'Quando o cliente foge das opções',
+        ajuda: 'Empurrãozinho curto quando o cliente digita algo que não é uma opção. (Se ele insistir, o bot para de responder para não incomodar, até ele digitar "menu".)',
         variaveis: [],
         multilinha: false,
-        padrao: 'Opção inválida. Por favor, escolha uma das opções abaixo:'
+        padrao: 'Não entendi 🤔 Responda com o *número* de uma opção. Para ver o menu de novo, é só digitar *menu*.'
       }
     ]
   },
