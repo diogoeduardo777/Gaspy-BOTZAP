@@ -743,6 +743,29 @@ const ABAS_POR_TIPO = {
 // Rótulo fixo da aba de itens para comida/loja; assistência mantém o rotulo_catalogo configurável.
 const ROTULO_ABA_POR_TIPO = { comida: '🍔 Cardápio', loja: '🛍️ Produtos' };
 
+// Textos auxiliares (ajuda + placeholders do formulário) já ajustados ao tipo, para os exemplos
+// combinarem com o ramo (uma lanchonete vê "Ex: X-Burguer", não "Ex: Capinha iPhone 13").
+const TEXTOS_ITENS_POR_TIPO = {
+  comida: {
+    ajuda: 'Monte seu cardápio: adicione os itens, defina o preço e controle a disponibilidade. As mudanças aparecem na hora para quem conversa com o bot.',
+    categoria: 'Ex: Lanches',
+    nome: 'Ex: X-Burguer',
+    descricao: 'Ex: pão, hambúrguer, queijo e salada'
+  },
+  loja: {
+    ajuda: 'Cadastre seus produtos: adicione, defina o preço e controle o estoque. As mudanças aparecem na hora para quem conversa com o bot.',
+    categoria: 'Ex: Capinhas',
+    nome: 'Ex: Capinha iPhone 13',
+    descricao: 'Detalhes do produto'
+  },
+  assistencia: {
+    ajuda: 'Cadastre os produtos/acessórios que você vende. Os tipos de serviço ficam na aba "Cadastro de Serviços".',
+    categoria: 'Ex: Acessórios',
+    nome: 'Ex: Película de vidro',
+    descricao: 'Detalhes do produto'
+  }
+};
+
 // Adapta o painel ao tipo de estabelecimento: mostra/esconde abas e ajusta o rótulo da aba de
 // itens. IMPORTANTE: esconder uma aba NÃO apaga nada — os registros (itens, serviços, pedidos)
 // continuam no banco. Isto controla apenas o que aparece na tela; trocar o tipo é reversível.
@@ -775,6 +798,20 @@ function aplicarTipo(tipo) {
   const label = ROTULO_ABA_POR_TIPO[t] || (configAtual && configAtual.rotulo_catalogo) || '🧰 Serviços';
   document.getElementById('btn-aba-cardapio').textContent = label;
   document.getElementById('titulo-cardapio').textContent = label;
+
+  // Ajusta os textos de ajuda e os placeholders de exemplo ao tipo.
+  const txt = TEXTOS_ITENS_POR_TIPO[t];
+  if (txt) {
+    const ajuda = document.getElementById('ajuda-cardapio');
+    if (ajuda) ajuda.textContent = txt.ajuda;
+    const setPh = (id, valor) => {
+      const el = document.getElementById(id);
+      if (el) el.placeholder = valor;
+    };
+    setPh('campo-categoria', txt.categoria);
+    setPh('campo-nome', txt.nome);
+    setPh('campo-descricao', txt.descricao);
+  }
 }
 
 document.getElementById('form-config').addEventListener('submit', async (evento) => {

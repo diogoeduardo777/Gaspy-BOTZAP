@@ -105,7 +105,7 @@
         <section id="aba-cardapio" class="aba">
           <div class="aba-cabecalho">
             <h2 id="titulo-cardapio">Cardápio</h2>
-            <p class="ajuda">
+            <p class="ajuda" id="ajuda-cardapio">
               Adicione, edite o preço e controle a disponibilidade dos seus
               itens. As mudanças aparecem na hora para quem conversa com o bot.
             </p>
@@ -355,11 +355,6 @@
                 <input type="text" name="nome" />
               </label>
               <label
-                >Saudação inicial
-                <small>(primeira mensagem que o cliente recebe)</small>
-                <textarea name="saudacao" rows="3"></textarea>
-              </label>
-              <label
                 >Nome da seção de itens
                 <small
                   >aparece no painel e no WhatsApp — ex: "🍽️ Cardápio", "🛍️ Loja
@@ -379,14 +374,10 @@
                 >Horário de atendimento
                 <input type="text" name="horario_atendimento" />
               </label>
-              <label
-                >Mensagem fora do horário
-                <textarea name="mensagem_fora_horario" rows="2"></textarea>
-              </label>
-              <label
-                >Mensagem de encerramento
-                <input type="text" name="mensagem_encerramento" />
-              </label>
+              <p class="msg-ajuda">
+                💬 Os textos que o bot envia (saudação, respostas, avisos…) ficam
+                na aba <strong>Mensagens</strong>.
+              </p>
             </fieldset>
 
             <fieldset>
