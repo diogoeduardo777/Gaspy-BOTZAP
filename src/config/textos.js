@@ -6,9 +6,14 @@
 //
 // {loja} está sempre disponível em qualquer mensagem (nome do estabelecimento).
 
+// Cada grupo declara em `tipos` para quais tipos de estabelecimento ele faz sentido. O painel usa
+// isso para esconder na aba "Mensagens" o que não se aplica ao tipo atual (ex: uma lanchonete não
+// vê os avisos de "aparelho pronto"). Esconder é só exibição — os textos personalizados de grupos
+// escondidos continuam salvos no banco e voltam a aparecer se o tipo for trocado de novo.
 const CATALOGO = [
   {
     grupo: 'Início',
+    tipos: ['comida', 'assistencia', 'loja'],
     itens: [
       {
         chave: 'saudacao',
@@ -30,6 +35,7 @@ const CATALOGO = [
   },
   {
     grupo: 'Solicitar serviço',
+    tipos: ['assistencia'],
     itens: [
       {
         chave: 'manutencao_inicio',
@@ -83,6 +89,7 @@ const CATALOGO = [
   },
   {
     grupo: 'Consultar status',
+    tipos: ['assistencia'],
     itens: [
       {
         chave: 'status_pedir',
@@ -136,6 +143,7 @@ const CATALOGO = [
   },
   {
     grupo: 'Loja / Pedidos',
+    tipos: ['comida', 'assistencia', 'loja'],
     itens: [
       {
         chave: 'pedido_rodape',
@@ -173,6 +181,7 @@ const CATALOGO = [
   },
   {
     grupo: 'Avisos automáticos (o bot manda sozinho)',
+    tipos: ['assistencia'],
     itens: [
       {
         chave: 'aviso_status',

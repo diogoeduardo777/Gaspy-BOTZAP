@@ -53,14 +53,16 @@ function mostrarTelaLogin(mensagemErro) {
   document.getElementById('erro-login').textContent = mensagemErro || '';
 }
 
-function mostrarTelaApp() {
+async function mostrarTelaApp() {
   ocultarTodasAsTelas();
   document.getElementById('tela-app').classList.remove('oculto');
   carregarCardapio();
   carregarServicosCatalogo();
   carregarAtendimentos();
+  // Carrega a config primeiro: a aba Mensagens usa configAtual.tipo_estabelecimento para
+  // esconder os grupos que não são do tipo atual.
+  await carregarConfig();
   carregarMensagens();
-  carregarConfig();
   iniciarMonitorWhatsApp();
 }
 
@@ -495,12 +497,20 @@ async function carregarMensagens() {
   const container = document.getElementById('lista-mensagens');
   container.innerHTML = '';
 
-  catalogo.forEach((grupo, indiceGrupo) => {
+  const tipoAtual = (configAtual && configAtual.tipo_estabelecimento) || 'comida';
+  let primeiroVisivel = true;
+
+  catalogo.forEach((grupo) => {
+    // Grupos que não se aplicam ao tipo atual são escondidos (mas continuam no DOM, para que
+    // salvar NÃO apague os textos personalizados deles — só a exibição muda).
+    const aplicaAoTipo = !grupo.tipos || grupo.tipos.includes(tipoAtual);
+
     // Conta quantos textos deste grupo já foram personalizados (aparece no cabeçalho).
     const qtdPersonalizados = grupo.itens.filter((i) => (valores[i.chave] || '').trim() !== '').length;
 
     const bloco = document.createElement('div');
     bloco.className = 'acordeao-grupo';
+    if (!aplicaAoTipo) bloco.classList.add('oculto');
 
     let itensHtml = '';
     grupo.itens.forEach((item) => {
@@ -537,8 +547,11 @@ async function carregarMensagens() {
       <div class="acordeao-corpo">${itensHtml}</div>`;
     container.appendChild(bloco);
 
-    // Primeiro grupo já aberto; os demais fechados.
-    if (indiceGrupo === 0) bloco.classList.add('aberto');
+    // Primeiro grupo VISÍVEL já aberto; os demais fechados.
+    if (aplicaAoTipo && primeiroVisivel) {
+      bloco.classList.add('aberto');
+      primeiroVisivel = false;
+    }
   });
 
   // Abre/fecha o grupo ao clicar no cabeçalho.
@@ -822,6 +835,7 @@ document.getElementById('form-config').addEventListener('submit', async (evento)
   aplicarRotuloCatalogo(atualizado.rotulo_catalogo);
   aplicarNomeEstabelecimento(atualizado.nome);
   aplicarTipo(atualizado.tipo_estabelecimento); // re-adapta abas/vocabulário ao novo tipo
+  carregarMensagens(); // re-renderiza a aba Mensagens mostrando só os grupos do novo tipo
   const aviso = document.getElementById('config-salvo');
   aviso.classList.remove('oculto');
   setTimeout(() => aviso.classList.add('oculto'), 2000);
