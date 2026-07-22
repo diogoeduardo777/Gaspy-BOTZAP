@@ -411,6 +411,7 @@ function paraConfigApi(config) {
     pix_nome_recebedor: config.pix_nome_recebedor,
     pix_cidade: config.pix_cidade,
     plano: config.plano,
+    tipo_estabelecimento: config.tipo_estabelecimento || 'comida',
     rotulo_catalogo: config.rotulo_catalogo,
     logo_data_url: config.logo_data_url || '',
     cor_destaque: config.cor_destaque || ''

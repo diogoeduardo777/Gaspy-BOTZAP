@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS estabelecimentos (
   pix_nome_recebedor TEXT NOT NULL DEFAULT '',
   pix_cidade TEXT NOT NULL DEFAULT '',
   plano TEXT NOT NULL DEFAULT 'basico' CHECK (plano IN ('basico', 'profissional')),
+  tipo_estabelecimento TEXT NOT NULL DEFAULT 'comida' CHECK (tipo_estabelecimento IN ('comida', 'assistencia', 'loja')), -- vertical: adapta abas do painel e o menu do bot
   rotulo_catalogo TEXT NOT NULL DEFAULT '🍽️ Cardápio', -- nome exibido no painel e no WhatsApp para a lista de itens (ex: "🛍️ Loja de Acessórios")
   painel_senha_hash TEXT, -- hash (salt:hash) da senha do painel, criada no 1º acesso; NULL = ainda não configurada
   logo_data_url TEXT NOT NULL DEFAULT '',   -- logo do estabelecimento (imagem embutida como data URL), exibida no painel

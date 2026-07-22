@@ -11,19 +11,23 @@ const { resolverTexto } = require('../config/textos');
 // Monta as opções REAIS do menu principal a partir do que o estabelecimento tem cadastrado hoje
 // (menu dinâmico). Lê direto do banco — sem tabela nova:
 //   - opção de produtos/cardápio (acao 'cardapio') só aparece se houver item disponível;
-//   - opção de solicitar serviço (acao 'manutencao') só aparece se houver serviço cadastrado;
-//   - as demais (consultar status, falar com atendente, mensagens fixas...) aparecem sempre.
+//   - fluxo de serviço/manutenção (acao 'manutencao') e consulta de status ('consultar_status')
+//     só aparecem quando o tipo é 'assistencia' E há serviço cadastrado — assim uma lanchonete
+//     nunca pergunta "qual aparelho / descreva o problema";
+//   - as demais (falar com atendente, mensagens fixas...) aparecem sempre.
 // Depois renumera 1..N em sequência, para não deixar "buracos" quando alguma opção some.
 // É usada TANTO para exibir o menu QUANTO para resolver o número escolhido — assim a numeração
 // mostrada e a numeração aceita são sempre iguais.
 function construirOpcoesVisiveis(config) {
   const temItens = cardapioRepo.listarItens(config.id, { somenteDisponiveis: true }).length > 0;
   const temServicos = servicosCatalogoRepo.listarServicos(config.id, { somenteDisponiveis: true }).length > 0;
+  const ehAssistencia = (config.tipo_estabelecimento || 'comida') === 'assistencia';
 
   const opcoes = (config.menu_principal && config.menu_principal.opcoes) || [];
   const visiveis = opcoes.filter((op) => {
     if (op.acao === 'cardapio') return temItens;
-    if (op.acao === 'manutencao') return temServicos;
+    if (op.acao === 'manutencao') return ehAssistencia && temServicos;
+    if (op.acao === 'consultar_status') return ehAssistencia;
     return true;
   });
 

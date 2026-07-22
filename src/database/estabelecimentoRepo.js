@@ -30,6 +30,7 @@ function paraConfig(row) {
     pix_nome_recebedor: row.pix_nome_recebedor,
     pix_cidade: row.pix_cidade,
     plano: row.plano,
+    tipo_estabelecimento: row.tipo_estabelecimento || 'comida',
     rotulo_catalogo: row.rotulo_catalogo,
     logo_data_url: row.logo_data_url || '',
     cor_destaque: row.cor_destaque || '',
@@ -46,12 +47,19 @@ function atualizarConfig(id, dados) {
   const campos = [
     'nome', 'saudacao', 'numero_atendente', 'horario_atendimento',
     'mensagem_fora_horario', 'mensagem_encerramento', 'chave_pix',
-    'pix_nome_recebedor', 'pix_cidade', 'plano', 'rotulo_catalogo'
+    'pix_nome_recebedor', 'pix_cidade', 'plano', 'tipo_estabelecimento', 'rotulo_catalogo'
   ];
   const atualizado = { ...atual };
   campos.forEach((campo) => {
     if (dados[campo] !== undefined) atualizado[campo] = dados[campo];
   });
+
+  // Blindagem contra o CHECK do banco: se vier um tipo inválido, mantém o atual (não deixa a
+  // rota 500). Trocar o tipo só muda exibição/vocabulário — nunca apaga dados.
+  const TIPOS_VALIDOS = ['comida', 'assistencia', 'loja'];
+  if (!TIPOS_VALIDOS.includes(atualizado.tipo_estabelecimento)) {
+    atualizado.tipo_estabelecimento = atual.tipo_estabelecimento || 'comida';
+  }
 
   db.prepare(`
     UPDATE estabelecimentos SET
@@ -59,7 +67,7 @@ function atualizarConfig(id, dados) {
       horario_atendimento = @horario_atendimento, mensagem_fora_horario = @mensagem_fora_horario,
       mensagem_encerramento = @mensagem_encerramento, chave_pix = @chave_pix,
       pix_nome_recebedor = @pix_nome_recebedor, pix_cidade = @pix_cidade, plano = @plano,
-      rotulo_catalogo = @rotulo_catalogo
+      tipo_estabelecimento = @tipo_estabelecimento, rotulo_catalogo = @rotulo_catalogo
     WHERE id = @id
   `).run(atualizado);
 

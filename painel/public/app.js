@@ -703,6 +703,7 @@ async function carregarConfig() {
   });
   aplicarRotuloCatalogo(config.rotulo_catalogo);
   aplicarNomeEstabelecimento(config.nome);
+  aplicarTipo(config.tipo_estabelecimento); // adapta abas + vocabulário ao tipo
 
   // Aparência salva
   if (config.cor_destaque) {
@@ -733,12 +734,57 @@ function aplicarNomeEstabelecimento(nome) {
   document.getElementById('nome-estabelecimento-header').textContent = nome;
 }
 
+// Quais abas (data-aba) aparecem em cada tipo de estabelecimento.
+const ABAS_POR_TIPO = {
+  comida: ['cardapio', 'atendimentos', 'mensagens', 'config'],
+  loja: ['cardapio', 'atendimentos', 'mensagens', 'config'],
+  assistencia: ['cardapio', 'servicos-catalogo', 'atendimentos', 'mensagens', 'config']
+};
+// Rótulo fixo da aba de itens para comida/loja; assistência mantém o rotulo_catalogo configurável.
+const ROTULO_ABA_POR_TIPO = { comida: '🍔 Cardápio', loja: '🛍️ Produtos' };
+
+// Adapta o painel ao tipo de estabelecimento: mostra/esconde abas e ajusta o rótulo da aba de
+// itens. IMPORTANTE: esconder uma aba NÃO apaga nada — os registros (itens, serviços, pedidos)
+// continuam no banco. Isto controla apenas o que aparece na tela; trocar o tipo é reversível.
+function aplicarTipo(tipo) {
+  const t = ABAS_POR_TIPO[tipo] ? tipo : 'comida';
+  const visiveis = ABAS_POR_TIPO[t];
+
+  document.querySelectorAll('.aba-btn').forEach((btn) => {
+    const mostra = visiveis.includes(btn.dataset.aba);
+    btn.classList.toggle('oculto', !mostra);
+    if (!mostra) {
+      const sec = document.getElementById('aba-' + btn.dataset.aba);
+      if (sec) sec.classList.add('oculto'); // some com a seção caso estivesse aberta
+    }
+  });
+
+  // Se a aba ativa foi escondida, cai para a primeira visível.
+  const ativa = document.querySelector('.aba-btn.ativo');
+  if (!ativa || ativa.classList.contains('oculto')) {
+    document.querySelectorAll('.aba-btn').forEach((b) => b.classList.remove('ativo'));
+    document.querySelectorAll('.aba').forEach((s) => s.classList.add('oculto'));
+    const primeiro = document.querySelector('.aba-btn[data-aba="' + visiveis[0] + '"]');
+    if (primeiro) {
+      primeiro.classList.add('ativo');
+      document.getElementById('aba-' + visiveis[0]).classList.remove('oculto');
+    }
+  }
+
+  // Vocabulário da aba de itens conforme o tipo.
+  const label = ROTULO_ABA_POR_TIPO[t] || (configAtual && configAtual.rotulo_catalogo) || '🧰 Serviços';
+  document.getElementById('btn-aba-cardapio').textContent = label;
+  document.getElementById('titulo-cardapio').textContent = label;
+}
+
 document.getElementById('form-config').addEventListener('submit', async (evento) => {
   evento.preventDefault();
   const dados = Object.fromEntries(new FormData(evento.target).entries());
   const atualizado = await chamarApi('/api/config', { method: 'PUT', body: JSON.stringify(dados) });
+  configAtual = atualizado;
   aplicarRotuloCatalogo(atualizado.rotulo_catalogo);
   aplicarNomeEstabelecimento(atualizado.nome);
+  aplicarTipo(atualizado.tipo_estabelecimento); // re-adapta abas/vocabulário ao novo tipo
   const aviso = document.getElementById('config-salvo');
   aviso.classList.remove('oculto');
   setTimeout(() => aviso.classList.add('oculto'), 2000);

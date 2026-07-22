@@ -36,6 +36,11 @@ if (!colunasEstabelecimentos.includes('cor_destaque')) {
 if (!colunasEstabelecimentos.includes('mensagens_json')) {
   db.exec("ALTER TABLE estabelecimentos ADD COLUMN mensagens_json TEXT NOT NULL DEFAULT '{}'");
 }
+if (!colunasEstabelecimentos.includes('tipo_estabelecimento')) {
+  // Bancos existentes ganham a coluna com o padrão 'comida' (não-destrutivo: só adiciona coluna,
+  // não mexe em nenhum dado). Rodar 2x é seguro por causa do guard acima.
+  db.exec("ALTER TABLE estabelecimentos ADD COLUMN tipo_estabelecimento TEXT NOT NULL DEFAULT 'comida' CHECK (tipo_estabelecimento IN ('comida', 'assistencia', 'loja'))");
+}
 
 const colunasServicosAgendados = db.prepare("PRAGMA table_info(servicos_agendados)").all().map((c) => c.name);
 if (!colunasServicosAgendados.includes('preco_centavos')) {
