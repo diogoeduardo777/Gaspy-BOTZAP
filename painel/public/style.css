@@ -882,3 +882,38 @@ button.abrir-os:hover {
     animation: none;
   }
 }
+
+/* ---------- Status da conexão do WhatsApp (chip + QR) ---------- */
+
+.header-direita { display: flex; align-items: center; gap: 10px; }
+
+.wa-status-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.8em; font-weight: 600; white-space: nowrap;
+  padding: 5px 11px; border: 1px solid var(--borda); border-radius: 999px;
+  color: var(--texto-suave); background: var(--bg-elev-2);
+}
+.wa-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--texto-fraco); flex: none; }
+.wa-status-chip.conectado { color: var(--ok); border-color: rgba(52, 211, 153, 0.35); }
+.wa-status-chip.conectado .wa-dot { background: var(--ok); box-shadow: 0 0 8px rgba(52,211,153,0.6); }
+.wa-status-chip.desconectado { color: var(--vermelho); border-color: rgba(248, 113, 113, 0.35); }
+.wa-status-chip.desconectado .wa-dot { background: var(--vermelho); }
+.wa-status-chip.aguardando { color: #eab308; border-color: rgba(234, 179, 8, 0.4); }
+.wa-status-chip.aguardando .wa-dot { background: #eab308; box-shadow: 0 0 8px rgba(234,179,8,0.6); }
+
+.wa-qr-banner {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  background: var(--bg-elev); border-bottom: 1px solid var(--borda);
+  border-left: 4px solid #eab308; padding: 16px 24px;
+}
+.wa-qr-banner .wa-qr-texto strong { font-size: 1em; }
+.wa-qr-banner .wa-qr-texto p { margin: 4px 0 0; color: var(--texto-suave); font-size: 0.85em; max-width: 46ch; }
+.wa-qr-banner img {
+  width: 200px; height: 200px; background: #fff; border-radius: 10px; padding: 8px; flex: none;
+}
+
+@media (max-width: 620px) {
+  .wa-status-chip { font-size: 0.74em; padding: 4px 8px; }
+  .wa-status-chip #wa-status-texto { display: none; } /* no mobile, só a bolinha no header */
+  .wa-qr-banner { padding: 14px 16px; }
+}

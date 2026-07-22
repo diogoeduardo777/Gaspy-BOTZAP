@@ -84,8 +84,22 @@
           <button class="aba-btn" data-aba="mensagens">💬 Mensagens</button>
           <button class="aba-btn" data-aba="config">⚙️ Configurações</button>
         </nav>
-        <button id="btn-sair" class="botao-sair">Sair</button>
+        <div class="header-direita">
+          <span id="wa-status-chip" class="wa-status-chip" title="Conexão do WhatsApp">
+            <span class="wa-dot"></span><span id="wa-status-texto">verificando…</span>
+          </span>
+          <button id="btn-sair" class="botao-sair">Sair</button>
+        </div>
       </header>
+
+      <!-- Banner do QR: aparece só quando o WhatsApp precisa ser (re)escaneado -->
+      <div id="wa-qr-banner" class="wa-qr-banner oculto">
+        <div class="wa-qr-texto">
+          <strong>🟡 Escaneie o QR Code para ativar o WhatsApp</strong>
+          <p>No celular do estabelecimento: WhatsApp → Aparelhos conectados → Conectar um aparelho.</p>
+        </div>
+        <img id="wa-qr-img" alt="QR Code do WhatsApp" />
+      </div>
 
       <main>
         <section id="aba-cardapio" class="aba">

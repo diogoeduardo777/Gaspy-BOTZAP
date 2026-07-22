@@ -8,16 +8,49 @@ const { fraseStatus } = require('../flows/statusFlow');
 let client = null;
 let pronto = false;
 
+// Estado da conexão do WhatsApp, exposto para o painel mostrar o status e o QR Code.
+// estadoConexao: 'conectado' | 'desconectado' | 'aguardando_qr'
+let ultimoQr = null;
+let estadoConexao = 'desconectado';
+
 function configurarCliente(waClient) {
   client = waClient;
 }
 
 function marcarPronto(valor) {
   pronto = !!valor;
+  if (pronto) {
+    // Conectou (evento 'ready'): estado conectado e some com o QR (já foi usado).
+    estadoConexao = 'conectado';
+    ultimoQr = null;
+  } else {
+    // Desconectou / falha de auth: o painel mostra vermelho. Um novo QR (definirQr) reativa o
+    // estado 'aguardando_qr' quando a biblioteca emitir um.
+    estadoConexao = 'desconectado';
+  }
 }
 
 function estaPronto() {
   return !!client && pronto;
+}
+
+// Guarda o último QR recebido (string crua vinda do whatsapp-web.js) e marca que estamos esperando
+// o scan. O painel converte essa string em imagem.
+function definirQr(qr) {
+  ultimoQr = qr;
+  estadoConexao = 'aguardando_qr';
+}
+
+function limparQr() {
+  ultimoQr = null;
+}
+
+function obterQr() {
+  return ultimoQr;
+}
+
+function obterStatusConexao() {
+  return { estado: estadoConexao, temQr: !!ultimoQr };
 }
 
 // Interruptor geral: NOTIFICACOES_PROATIVAS=false desliga todos os disparos proativos.
@@ -65,6 +98,10 @@ module.exports = {
   configurarCliente,
   marcarPronto,
   estaPronto,
+  definirQr,
+  limparQr,
+  obterQr,
+  obterStatusConexao,
   notificacoesAtivas,
   notificarStatusServico,
   notificarLembreteRetirada

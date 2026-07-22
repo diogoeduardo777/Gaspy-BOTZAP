@@ -2,6 +2,7 @@ require('dotenv').config();
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
+const QRCode = require('qrcode');
 
 const estabelecimentoRepo = require('../src/database/estabelecimentoRepo');
 const cardapioRepo = require('../src/database/cardapioRepo');
@@ -131,6 +132,23 @@ function criarApp() {
     }
     estabelecimentoRepo.definirSenhaHash(clientIdAtual(), hashSenha(senha));
     res.json({ ok: true });
+  });
+
+  // Estado da conexão do WhatsApp + QR Code (para o dono reescanear pelo painel sem olhar o
+  // terminal). O QR é gerado como imagem (data URL) só quando estamos aguardando o scan.
+  app.get('/api/whatsapp/status', autenticar, async (req, res) => {
+    const status = notificador.obterStatusConexao();
+    let qr = null;
+    // Se o pacote "qrcode" falhar por qualquer motivo, NÃO derruba o servidor: retorna qr null.
+    if (status.estado === 'aguardando_qr' && status.temQr) {
+      try {
+        qr = await QRCode.toDataURL(notificador.obterQr(), { margin: 1, width: 260 });
+      } catch (err) {
+        console.error('[whatsapp/status] falha ao gerar imagem do QR:', err.message);
+        qr = null;
+      }
+    }
+    res.json({ estado: status.estado, qr });
   });
 
   app.get('/api/config', autenticar, (req, res) => {

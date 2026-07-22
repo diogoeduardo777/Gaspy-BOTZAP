@@ -61,6 +61,55 @@ function mostrarTelaApp() {
   carregarAtendimentos();
   carregarMensagens();
   carregarConfig();
+  iniciarMonitorWhatsApp();
+}
+
+// ---------- Status da conexão do WhatsApp (bolinha + QR no painel) ----------
+
+let monitorWhatsApp = null;
+
+async function atualizarStatusWhatsApp() {
+  // Só consulta enquanto o painel está visível (evita chamadas quando deslogado).
+  if (document.getElementById('tela-app').classList.contains('oculto')) return;
+
+  let dados;
+  try {
+    dados = await chamarApi('/api/whatsapp/status');
+  } catch {
+    return; // erro/deslogado: chamarApi já trata o 401; aqui só ignoramos
+  }
+
+  const chip = document.getElementById('wa-status-chip');
+  const texto = document.getElementById('wa-status-texto');
+  const banner = document.getElementById('wa-qr-banner');
+  const img = document.getElementById('wa-qr-img');
+
+  chip.classList.remove('conectado', 'desconectado', 'aguardando');
+
+  if (dados.estado === 'conectado') {
+    chip.classList.add('conectado');
+    texto.textContent = '🟢 Bot ativo no WhatsApp';
+    banner.classList.add('oculto');
+  } else if (dados.estado === 'aguardando_qr') {
+    chip.classList.add('aguardando');
+    texto.textContent = '🟡 Escaneie o QR para ativar';
+    if (dados.qr) {
+      img.src = dados.qr;
+      banner.classList.remove('oculto');
+    } else {
+      banner.classList.add('oculto');
+    }
+  } else {
+    chip.classList.add('desconectado');
+    texto.textContent = '🔴 Bot inativo';
+    banner.classList.add('oculto');
+  }
+}
+
+function iniciarMonitorWhatsApp() {
+  atualizarStatusWhatsApp();
+  if (monitorWhatsApp) return; // evita múltiplos timers
+  monitorWhatsApp = setInterval(atualizarStatusWhatsApp, 5000);
 }
 
 document.getElementById('btn-criar-senha').addEventListener('click', async () => {

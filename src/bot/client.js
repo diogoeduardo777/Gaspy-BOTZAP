@@ -2,6 +2,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const path = require('path');
 const fs = require('fs');
+const notificador = require('./notificador');
 
 const clientId = process.env.CLIENT_ID || 'default';
 const sessionPath = path.resolve(process.env.SESSION_PATH || './sessions');
@@ -60,16 +61,23 @@ function criarCliente() {
   const client = new Client(opcoes);
 
   client.on('qr', (qr) => {
-    console.log('\n📱 Escaneie o QR Code abaixo com o WhatsApp:\n');
+    // Fallback no terminal (mantido) + disponibiliza o QR para o painel web (definirQr põe o
+    // estado em 'aguardando_qr').
+    console.log('\n📱 Escaneie o QR Code abaixo com o WhatsApp (ou pelo painel web):\n');
     qrcode.generate(qr, { small: true });
+    notificador.definirQr(qr);
   });
 
   client.on('ready', () => {
     console.log(`\n✅ Bot conectado! Cliente: ${clientId}\n`);
+    // Estado 'conectado' + limpa o QR. (O index.js também chama marcarPronto no 'ready'; é
+    // idempotente.)
+    notificador.marcarPronto(true);
   });
 
   client.on('auth_failure', (msg) => {
     console.error('❌ Falha na autenticação:', msg);
+    notificador.marcarPronto(false); // estado 'desconectado' no painel
   });
 
   return client;
