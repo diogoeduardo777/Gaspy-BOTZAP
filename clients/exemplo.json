@@ -6,13 +6,13 @@
   "saudacao": "Ola! Bem-vindo(a) 👋\nComo posso te ajudar hoje?",
   "mensagem_encerramento": "Obrigado pelo contato! 😊",
   "mensagem_fora_horario": "Ola! No momento estamos fora do horario de atendimento. Deixe sua mensagem que retornaremos assim que possivel!",
-  "rotulo_catalogo": "🛍️ Produtos",
+  "rotulo_catalogo": "🍔 Cardápio",
   "menu_principal": {
     "titulo": "Escolha uma opcao:",
     "opcoes": [
       { "numero": "1", "label": "🔧 Solicitar um servico", "acao": "manutencao" },
       { "numero": "2", "label": "🔍 Consultar meu pedido/servico", "acao": "consultar_status" },
-      { "numero": "3", "label": "🛍️ Ver produtos", "acao": "cardapio" },
+      { "numero": "3", "label": "🛒 Fazer pedido", "acao": "cardapio" },
       { "numero": "4", "label": "💬 Falar com atendente", "acao": "transferir", "mensagem": "Tudo bem! Vou te encaminhar para um atendente." }
     ]
   },

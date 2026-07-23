@@ -37,6 +37,19 @@ function linhaVazia(colunas, mensagem) {
   return `<tr class="linha-vazia"><td colspan="${colunas}">${esc(mensagem)}</td></tr>`;
 }
 
+// Aviso rápido de confirmação no canto da tela (ex: "Status atualizado ✓"). tipo 'erro' pinta de
+// vermelho. Some sozinho depois de 2,5s. Dá ao dono leigo a certeza de que a ação foi salva.
+let toastTimer = null;
+function mostrarToast(mensagem, tipo) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = mensagem;
+  toast.classList.remove('oculto', 'toast-erro');
+  if (tipo === 'erro') toast.classList.add('toast-erro');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.add('oculto'), 2500);
+}
+
 function ocultarTodasAsTelas() {
   ['tela-setup', 'tela-login', 'tela-app'].forEach((id) => document.getElementById(id).classList.add('oculto'));
 }
@@ -105,7 +118,7 @@ async function atualizarStatusWhatsApp() {
     }
   } else {
     chip.classList.add('desconectado');
-    texto.textContent = '🔴 Bot inativo';
+    texto.textContent = '🔴 WhatsApp desconectado';
     banner.classList.add('oculto');
   }
 }
@@ -388,12 +401,22 @@ async function carregarAtendimentos() {
 
   corpo.querySelectorAll('.status-atendimento').forEach((select) => {
     colorirStatus(select);
+    let statusAnterior = select.value; // para reverter se der erro
     select.addEventListener('change', async () => {
       colorirStatus(select);
-      await chamarApi(select.dataset.endpoint, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: select.value })
-      });
+      try {
+        await chamarApi(select.dataset.endpoint, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: select.value })
+        });
+        statusAnterior = select.value;
+        mostrarToast('Status atualizado ✓');
+      } catch (err) {
+        // Reverte a seleção e avisa — o dono não fica achando que salvou algo que não salvou.
+        select.value = statusAnterior;
+        colorirStatus(select);
+        mostrarToast('Não foi possível salvar. Tente de novo.', 'erro');
+      }
     });
   });
 
@@ -408,10 +431,16 @@ async function carregarAtendimentos() {
 
   corpo.querySelectorAll('.toggle-retirado').forEach((checkbox) => {
     checkbox.addEventListener('change', async () => {
-      await chamarApi(`/api/servicos/${checkbox.dataset.id}/retirado`, {
-        method: 'PATCH',
-        body: JSON.stringify({ retirado: checkbox.checked })
-      });
+      try {
+        await chamarApi(`/api/servicos/${checkbox.dataset.id}/retirado`, {
+          method: 'PATCH',
+          body: JSON.stringify({ retirado: checkbox.checked })
+        });
+        mostrarToast(checkbox.checked ? 'Marcado como entregue ✓' : 'Desmarcado ✓');
+      } catch (err) {
+        checkbox.checked = !checkbox.checked; // reverte
+        mostrarToast('Não foi possível salvar. Tente de novo.', 'erro');
+      }
     });
   });
 
@@ -434,6 +463,7 @@ async function responderPedido(pedidoId, status) {
       .join('\n');
     alert('Pedido aceito! ⚠️ Atenção: faltou estoque de:\n\n' + itens + '\n\nO estoque desses itens foi zerado. Reponha o estoque ou combine com o cliente.');
   }
+  mostrarToast(status === 'aceito' ? 'Pedido aceito ✓' : 'Pedido recusado');
   await carregarAtendimentos();
   carregarCardapio(); // o estoque mudou; atualiza a aba de itens também
 }
