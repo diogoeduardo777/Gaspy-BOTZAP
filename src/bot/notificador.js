@@ -4,6 +4,7 @@
 const { resolverTexto } = require('../config/textos');
 const { formatarProtocolo } = require('../flows/manutencaoFlow');
 const { fraseStatus } = require('../flows/statusFlow');
+const { mascararTelefone } = require('../utils/formatador');
 
 let client = null;
 let pronto = false;
@@ -61,14 +62,14 @@ function notificacoesAtivas() {
 async function enviarMensagem(telefone, texto) {
   if (!notificacoesAtivas()) return false;
   if (!estaPronto()) {
-    console.warn(`[notificador] Bot ainda não conectado — mensagem não enviada para ${telefone}.`);
+    console.warn(`[notificador] Bot ainda não conectado — mensagem não enviada para ${mascararTelefone(telefone)}.`);
     return false;
   }
   try {
     await client.sendMessage(telefone, texto);
     return true;
   } catch (err) {
-    console.error(`[notificador] Falha ao enviar mensagem para ${telefone}:`, err.message);
+    console.error(`[notificador] Falha ao enviar mensagem para ${mascararTelefone(telefone)}:`, err.message);
     return false;
   }
 }

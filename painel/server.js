@@ -127,8 +127,10 @@ function criarApp() {
       return res.status(403).json({ erro: 'A senha do painel já foi configurada.' });
     }
     const senha = (req.body && req.body.senha) || '';
-    if (String(senha).length < 4) {
-      return res.status(400).json({ erro: 'A senha precisa ter pelo menos 4 caracteres.' });
+    // Mínimo de 8 caracteres para NOVAS senhas. Senhas curtas já criadas continuam válidas no
+    // login (a verificação de tamanho só acontece aqui, na criação) — não trava ninguém.
+    if (String(senha).length < 8) {
+      return res.status(400).json({ erro: 'A senha precisa ter pelo menos 8 caracteres.' });
     }
     estabelecimentoRepo.definirSenhaHash(clientIdAtual(), hashSenha(senha));
     res.json({ ok: true });

@@ -2,6 +2,7 @@ const { List } = require('whatsapp-web.js');
 const { processarMensagem } = require('../flows');
 const { carregarConfig } = require('../config/loader');
 const logsRepo = require('../database/logsRepo');
+const { mascararTelefone } = require('../utils/formatador');
 
 // O que o cliente "respondeu": pode ser um clique num botão/linha de lista nativa OU um texto
 // digitado. Como usamos o próprio NÚMERO da opção como id do botão/linha, os dois caminhos caem
@@ -64,8 +65,15 @@ async function handleMessage(message) {
       await enviarResposta(message, resposta);
     }
   } catch (err) {
-    console.error(`Erro ao processar mensagem de ${telefone}:`, err.message);
-    await message.reply('Ocorreu um erro. Por favor, tente novamente ou digite *menu*.');
+    // Telefone mascarado no log (LGPD): não expõe o número completo no console.
+    console.error(`Erro ao processar mensagem de ${mascararTelefone(telefone)}:`, err.message);
+    // O próprio reply de erro pode falhar (ex: página do WhatsApp caiu). Protege para o erro do
+    // reply não borbulhar e derrubar o handler — o atendimento dos outros clientes continua.
+    try {
+      await message.reply('Ocorreu um erro. Por favor, tente novamente ou digite *menu*.');
+    } catch (errReply) {
+      console.error('Falha também ao enviar a mensagem de erro ao cliente:', errReply.message);
+    }
   }
 }
 

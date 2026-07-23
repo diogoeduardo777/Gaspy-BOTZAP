@@ -117,8 +117,8 @@ function iniciarMonitorWhatsApp() {
 document.getElementById('btn-criar-senha').addEventListener('click', async () => {
   const senha = document.getElementById('input-nova-senha').value;
   const confirma = document.getElementById('input-confirma-senha').value;
-  if (senha.length < 4) {
-    mostrarTelaSetup('A senha precisa ter pelo menos 4 caracteres.');
+  if (senha.length < 8) {
+    mostrarTelaSetup('A senha precisa ter pelo menos 8 caracteres.');
     return;
   }
   if (senha !== confirma) {

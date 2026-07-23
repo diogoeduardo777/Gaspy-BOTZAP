@@ -28,6 +28,9 @@ function listarServicos(estabelecimentoId) {
 }
 
 function atualizarStatus(estabelecimentoId, id, status) {
+  // `dataConclusao` é um fragmento SQL FIXO escolhido internamente (nunca vem do usuário): ou
+  // grava a hora atual quando conclui, ou mantém o valor da coluna. Não há injeção — o `status`
+  // e os ids vão sempre por parâmetro (?). Interpolar aqui é seguro por serem literais constantes.
   const dataConclusao = status === 'concluido' ? "datetime('now')" : 'data_conclusao';
   db.prepare(`
     UPDATE servicos_agendados SET status = ?, data_conclusao = ${dataConclusao}
