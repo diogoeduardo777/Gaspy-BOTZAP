@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
   -- Ciclo do pedido de produto: nasce 'pendente'; o dono confirma ('aceito') ou nega ('recusado');
   -- 'pago'/'concluido'/'cancelado' seguem disponíveis para o acompanhamento manual no painel.
   status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'aceito', 'recusado', 'pago', 'cancelado', 'concluido')),
+  estoque_baixado INTEGER NOT NULL DEFAULT 0, -- 1 = o estoque já foi debitado no aceite (trava contra dupla-baixa)
   pix_txid TEXT NOT NULL DEFAULT '',
   criado_em TEXT NOT NULL DEFAULT (datetime('now')),
   atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))

@@ -268,13 +268,20 @@ function criarApp() {
     const anterior = pedidosRepo.buscarPedido(config.id, id);
     const pedido = pedidosRepo.atualizarStatus(config.id, id, status);
 
-    // Ao ACEITAR ou RECUSAR (e só quando o status realmente mudou), o cliente é avisado no
-    // WhatsApp. Fire-and-forget para não segurar a resposta do painel nem quebrar se o bot
-    // estiver offline.
-    if (anterior && anterior.status !== status && (status === 'aceito' || status === 'recusado')) {
-      notificador.notificarClientePedido(pedido, config, status).catch(() => {});
+    let avisoEstoque = null;
+    if (anterior && anterior.status !== status) {
+      // Ao ACEITAR ou RECUSAR, o cliente é avisado no WhatsApp. Fire-and-forget para não segurar
+      // a resposta do painel nem quebrar se o bot estiver offline.
+      if (status === 'aceito' || status === 'recusado') {
+        notificador.notificarClientePedido(pedido, config, status).catch(() => {});
+      }
+      // Baixa de estoque SÓ para loja e SÓ no aceite (a trava estoque_baixado evita dupla-baixa).
+      if (status === 'aceito' && config.tipo_estabelecimento === 'loja') {
+        const resultado = pedidosRepo.baixarEstoqueAoAceitar(config.id, id);
+        if (resultado.faltas && resultado.faltas.length) avisoEstoque = resultado.faltas;
+      }
     }
-    res.json(pedido);
+    res.json({ ...pedido, aviso_estoque: avisoEstoque });
   });
 
   // Contador leve de pedidos pendentes — usado pelo painel para o "sino"/badge da aba de pedidos

@@ -422,11 +422,20 @@ async function carregarAtendimentos() {
 
 // Aceita ou recusa um pedido pendente e recarrega a lista (o backend avisa o cliente no WhatsApp).
 async function responderPedido(pedidoId, status) {
-  await chamarApi(`/api/pedidos/${pedidoId}/status`, {
+  const resposta = await chamarApi(`/api/pedidos/${pedidoId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status })
   });
+  // Se ao aceitar faltou estoque de algum item (loja), avisa o dono de forma clara. O estoque
+  // foi zerado nesses itens (nunca fica negativo); cabe ao dono repor ou combinar com o cliente.
+  if (resposta && resposta.aviso_estoque && resposta.aviso_estoque.length) {
+    const itens = resposta.aviso_estoque
+      .map((f) => `• ${f.nome} (tinha ${f.disponivel}, pedido ${f.pedido})`)
+      .join('\n');
+    alert('Pedido aceito! ⚠️ Atenção: faltou estoque de:\n\n' + itens + '\n\nO estoque desses itens foi zerado. Reponha o estoque ou combine com o cliente.');
+  }
   await carregarAtendimentos();
+  carregarCardapio(); // o estoque mudou; atualiza a aba de itens também
 }
 
 // Atualiza o "badge" (contador vermelho) da aba de pedidos. Zero = escondido.

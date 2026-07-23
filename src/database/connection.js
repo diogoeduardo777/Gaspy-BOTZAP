@@ -79,6 +79,13 @@ if (pedidosTabela && pedidosTabela.sql && !pedidosTabela.sql.includes("'aceito'"
   migrarPedidos();
 }
 
+// Coluna de controle da baixa de estoque (Fase 4). Idempotente e não-destrutiva. Cobre bancos
+// que já têm o CHECK novo mas ainda não tinham essa coluna.
+const colunasPedidos = db.prepare("PRAGMA table_info(pedidos)").all().map((c) => c.name);
+if (!colunasPedidos.includes('estoque_baixado')) {
+  db.exec('ALTER TABLE pedidos ADD COLUMN estoque_baixado INTEGER NOT NULL DEFAULT 0');
+}
+
 const colunasServicosAgendados = db.prepare("PRAGMA table_info(servicos_agendados)").all().map((c) => c.name);
 if (!colunasServicosAgendados.includes('preco_centavos')) {
   db.exec('ALTER TABLE servicos_agendados ADD COLUMN preco_centavos INTEGER');
