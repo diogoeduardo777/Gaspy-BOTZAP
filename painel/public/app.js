@@ -178,6 +178,24 @@ document.getElementById('btn-sair').addEventListener('click', () => {
   mostrarTelaLogin();
 });
 
+// ---------- Tema (claro / escuro) ----------
+// Claro é o padrão. O <head> já aplica o tema salvo antes de pintar (evita "flash"); aqui só
+// mantemos o ícone do botão e a persistência sincronizados.
+function aplicarTema(tema) {
+  const raiz = document.documentElement;
+  if (tema === 'dark') raiz.setAttribute('data-theme', 'dark');
+  else raiz.removeAttribute('data-theme');
+  const btn = document.getElementById('btn-tema');
+  if (btn) btn.textContent = tema === 'dark' ? '☀️' : '🌙'; // mostra o que a pessoa vai ativar
+  try { localStorage.setItem('gaspy_tema', tema); } catch (e) {}
+}
+document.getElementById('btn-tema').addEventListener('click', () => {
+  const escuroAgora = document.documentElement.getAttribute('data-theme') === 'dark';
+  aplicarTema(escuroAgora ? 'light' : 'dark');
+});
+// sincroniza o ícone com o tema atual ao carregar
+aplicarTema(localStorage.getItem('gaspy_tema') === 'dark' ? 'dark' : 'light');
+
 document.querySelectorAll('.aba-btn').forEach((botao) => {
   botao.addEventListener('click', () => {
     document.querySelectorAll('.aba-btn').forEach((b) => b.classList.remove('ativo'));
@@ -336,18 +354,38 @@ function colorirStatus(select) {
   select.style.color = cor.cor;
 }
 
+// A lista de atendimentos pode crescer bastante no dia a dia, então é paginada: buscamos tudo uma
+// vez (cache) e mostramos POR_PAGINA por vez, com botões Anterior/Próxima. O contador de pendentes
+// (badge) sempre olha a lista INTEIRA, não só a página visível.
+let atendimentosCache = [];
+let paginaAtendimentos = 1;
+const POR_PAGINA_ATENDIMENTOS = 12;
+
 async function carregarAtendimentos() {
-  const atendimentos = await chamarApi('/api/atendimentos');
+  atendimentosCache = await chamarApi('/api/atendimentos');
+  paginaAtendimentos = 1;
+  atualizarBadgePendentes(
+    atendimentosCache.filter((i) => i.tipo === 'produto' && i.status === 'pendente').length
+  );
+  renderAtendimentos();
+}
+
+function renderAtendimentos() {
   const corpo = document.querySelector('#tabela-atendimentos tbody');
 
-  if (atendimentos.length === 0) {
+  if (atendimentosCache.length === 0) {
     corpo.innerHTML = linhaVazia(9, 'Nada por aqui ainda. Pedidos de produtos e solicitações de manutenção aparecem nesta lista assim que chegarem pelo WhatsApp.');
+    renderPaginacaoAtendimentos(0);
     return;
   }
 
+  const totalPaginas = Math.max(1, Math.ceil(atendimentosCache.length / POR_PAGINA_ATENDIMENTOS));
+  if (paginaAtendimentos > totalPaginas) paginaAtendimentos = totalPaginas;
+  const inicio = (paginaAtendimentos - 1) * POR_PAGINA_ATENDIMENTOS;
+  const pagina = atendimentosCache.slice(inicio, inicio + POR_PAGINA_ATENDIMENTOS);
+
   corpo.innerHTML = '';
-  let qtdPendentes = 0;
-  atendimentos.forEach((item) => {
+  pagina.forEach((item) => {
     const ehProduto = item.tipo === 'produto';
     const mapaStatus = ehProduto ? STATUS_PEDIDO : STATUS_SERVICO;
     const endpoint = ehProduto ? `/api/pedidos/${item.id}/status` : `/api/servicos/${item.id}/status`;
@@ -356,7 +394,6 @@ async function carregarAtendimentos() {
     // Pedido de produto ainda não confirmado: em vez do select técnico, mostra os botões grandes
     // Aceitar/Recusar — a ação óbvia para o dono. (OS de assistência tem seu próprio ciclo.)
     const ehPedidoPendente = ehProduto && item.status === 'pendente';
-    if (ehPedidoPendente) qtdPendentes += 1;
 
     // "Entregue?" só faz sentido para serviços (aparelho retirado pelo cliente).
     const celulaEntregue = ehProduto
@@ -396,8 +433,6 @@ async function carregarAtendimentos() {
     `;
     corpo.appendChild(linha);
   });
-
-  atualizarBadgePendentes(qtdPendentes);
 
   corpo.querySelectorAll('.status-atendimento').forEach((select) => {
     colorirStatus(select);
@@ -446,6 +481,30 @@ async function carregarAtendimentos() {
 
   corpo.querySelectorAll('.abrir-os').forEach((botao) => {
     botao.addEventListener('click', () => abrirModalOS(botao.dataset.id));
+  });
+
+  renderPaginacaoAtendimentos(totalPaginas);
+}
+
+// Desenha os controles de paginação; some quando cabe tudo numa página só.
+function renderPaginacaoAtendimentos(totalPaginas) {
+  const c = document.getElementById('paginacao-atendimentos');
+  if (!c) return;
+  if (totalPaginas <= 1) {
+    c.classList.add('oculto');
+    c.innerHTML = '';
+    return;
+  }
+  c.classList.remove('oculto');
+  c.innerHTML = `
+    <button class="pag-btn" data-dir="-1" ${paginaAtendimentos <= 1 ? 'disabled' : ''}>‹ Anterior</button>
+    <span class="pag-info">Página ${paginaAtendimentos} de ${totalPaginas}</span>
+    <button class="pag-btn" data-dir="1" ${paginaAtendimentos >= totalPaginas ? 'disabled' : ''}>Próxima ›</button>`;
+  c.querySelectorAll('.pag-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      paginaAtendimentos += Number(b.dataset.dir);
+      renderAtendimentos();
+    });
   });
 }
 

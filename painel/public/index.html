@@ -10,6 +10,15 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Aplica o tema salvo ANTES da página pintar, para não "piscar" o tema errado.
+      // Tema claro é o padrão; só marca data-theme quando for escuro.
+      try {
+        if (localStorage.getItem('gaspy_tema') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="tela-setup" class="tela oculto">
@@ -88,6 +97,7 @@
           <span id="wa-status-chip" class="wa-status-chip" title="Conexão do WhatsApp">
             <span class="wa-dot"></span><span id="wa-status-texto">verificando…</span>
           </span>
+          <button id="btn-tema" class="botao-tema" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">🌙</button>
           <button id="btn-sair" class="botao-sair">Sair</button>
         </div>
       </header>
@@ -279,6 +289,7 @@
               <tbody></tbody>
             </table>
           </div>
+          <div id="paginacao-atendimentos" class="paginacao oculto"></div>
         </section>
 
         <section id="aba-mensagens" class="aba oculto">
@@ -312,7 +323,7 @@
             </label>
             <img id="preview-logo" alt="Prévia do logo" style="max-height: 60px; align-self: flex-start; border-radius: 8px; display: none" />
             <label>Cor de destaque do painel
-              <input type="color" id="input-cor" value="#4f8cff" style="width: 60px; height: 38px; padding: 2px" />
+              <input type="color" id="input-cor" value="#0f766e" style="width: 60px; height: 38px; padding: 2px" />
             </label>
             <div class="modal-acoes">
               <button id="btn-salvar-visual" class="botao-primario">Salvar aparência</button>

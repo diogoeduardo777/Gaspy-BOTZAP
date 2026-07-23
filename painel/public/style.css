@@ -1,40 +1,92 @@
 /* ============================================================
-   Gaspy BOTZAP — Painel  |  tema dark tech, minimalista
+   Gaspy BOTZAP — Painel
+   Ferramenta de trabalho: sóbria, legível e profissional.
+   Dois temas: CLARO (padrão) e ESCURO. A cor de destaque (--azul) é
+   um verde-azulado (teal) com apoio de índigo (--accent-2), a "segunda
+   cor" do tema escuro. Tamanhos e contraste pensados para público adulto.
    ============================================================ */
 
 * {
   box-sizing: border-box;
 }
 
+/* ---------- TEMA CLARO (padrão) ---------- */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* superfícies */
-  --bg: #0a0e17; /* fundo geral (quase preto azulado) */
-  --bg-elev: #111725; /* cartões / seções */
-  --bg-elev-2: #171f30; /* inputs, hover, itens */
-  --borda: #232c3f;
-  --borda-forte: #2f3a52;
+  --bg: #eef1f6;        /* fundo geral (cinza bem claro) */
+  --bg-elev: #ffffff;   /* cartões / seções */
+  --bg-elev-2: #f1f4f9; /* inputs, hover, itens */
+  --borda: #dce1ea;
+  --borda-forte: #c3ccd9;
 
   /* texto */
-  --texto: #e7ecf4;
-  --texto-suave: #93a1b9;
-  --texto-fraco: #64718a;
+  --texto: #1b2430;
+  --texto-suave: #566073;
+  --texto-fraco: #8893a3;
 
-  /* azul (cor de destaque) */
-  --azul: #4f8cff;
-  --azul-hover: #3b78f0;
-  --azul-suave: rgba(79, 140, 255, 0.14);
-  --azul-glow: rgba(79, 140, 255, 0.3);
-  --gradiente: linear-gradient(135deg, #4f8cff 0%, #6366f1 100%);
+  /* cor de destaque (teal) + segunda cor (índigo) */
+  --azul: #0f766e;
+  --azul-hover: #0c5f59;
+  --azul-suave: rgba(15, 118, 110, 0.10);
+  --azul-glow: rgba(15, 118, 110, 0.22);
+  --accent-2: #4f46e5;
+  --gradiente: linear-gradient(135deg, #0f766e 0%, #4f46e5 100%);
 
   /* estados */
+  --ok: #15803d;
+  --vermelho: #dc2626;
+  --vermelho-suave: rgba(220, 38, 38, 0.10);
+
+  /* texto legível SOBRE cada cor cheia (botões/badges) */
+  --sobre-azul: #ffffff;
+  --sobre-ok: #ffffff;
+  --sobre-vermelho: #ffffff;
+
+  /* apoios de superfície dependentes de tema */
+  --header-bg: rgba(255, 255, 255, 0.88);
+  --overlay: rgba(20, 28, 40, 0.45);
+
+  --raio: 12px;
+  --raio-s: 9px;
+  --sombra: 0 1px 2px rgba(20, 30, 50, 0.06), 0 6px 20px rgba(20, 30, 50, 0.08);
+}
+
+/* ---------- TEMA ESCURO ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0f141b;
+  --bg-elev: #161d27;
+  --bg-elev-2: #1f2836;
+  --borda: #2a3441;
+  --borda-forte: #384454;
+
+  --texto: #e7ecf3;
+  --texto-suave: #9aa7b8;
+  --texto-fraco: #66758a;
+
+  /* teal claro (destaque) + índigo claro (segunda cor) */
+  --azul: #2dd4bf;
+  --azul-hover: #14b8a6;
+  --azul-suave: rgba(45, 212, 191, 0.14);
+  --azul-glow: rgba(45, 212, 191, 0.26);
+  --accent-2: #818cf8;
+  --gradiente: linear-gradient(135deg, #2dd4bf 0%, #818cf8 100%);
+
   --ok: #34d399;
   --vermelho: #f87171;
   --vermelho-suave: rgba(248, 113, 113, 0.14);
 
-  --raio: 14px;
-  --raio-s: 10px;
+  /* no escuro as cores são claras -> texto escuro por cima */
+  --sobre-azul: #04231e;
+  --sobre-ok: #05331f;
+  --sobre-vermelho: #3a0a0a;
+
+  --header-bg: rgba(15, 20, 27, 0.85);
+  --overlay: rgba(3, 6, 12, 0.72);
+
   --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 
@@ -47,21 +99,10 @@ body {
     Arial,
     sans-serif;
   margin: 0;
-  background:
-    radial-gradient(
-      1200px 600px at 85% -10%,
-      rgba(79, 140, 255, 0.1),
-      transparent 60%
-    ),
-    radial-gradient(
-      900px 500px at -10% 110%,
-      rgba(99, 102, 241, 0.08),
-      transparent 55%
-    ),
-    var(--bg);
-  background-attachment: fixed;
+  font-size: 16.5px; /* base um pouco maior: mais confortável para público adulto */
+  background: var(--bg); /* fundo plano e sóbrio, sem "glow" de fundo */
   color: var(--texto);
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -150,7 +191,7 @@ body {
 .botao-primario {
   padding: 12px 20px;
   background: var(--azul);
-  color: #fff;
+  color: var(--sobre-azul);
   border: none;
   border-radius: var(--raio-s);
   font-size: 0.98em;
@@ -205,7 +246,7 @@ body {
 /* ---------- Cabeçalho + navegação ---------- */
 
 header {
-  background: rgba(13, 18, 30, 0.85);
+  background: var(--header-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--borda);
   padding: 14px 24px;
@@ -258,10 +299,10 @@ nav {
   background: transparent;
   border: none;
   color: var(--texto-suave);
-  padding: 9px 16px;
+  padding: 10px 17px;
   border-radius: 999px;
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 0.95em;
   font-weight: 600;
   white-space: nowrap;
   transition:
@@ -274,7 +315,7 @@ nav {
 }
 .aba-btn.ativo {
   background: var(--azul);
-  color: #fff;
+  color: var(--sobre-azul);
   box-shadow: 0 4px 14px var(--azul-glow);
 }
 
@@ -400,20 +441,20 @@ table {
 }
 th {
   text-align: left;
-  padding: 12px 14px;
-  font-size: 0.74em;
+  padding: 13px 15px;
+  font-size: 0.8em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--texto-suave);
-  font-weight: 600;
+  font-weight: 700;
   background: var(--bg-elev-2);
   border-bottom: 1px solid var(--borda);
   white-space: nowrap;
 }
 td {
   text-align: left;
-  padding: 12px 14px;
-  font-size: 0.92em;
+  padding: 13px 15px;
+  font-size: 0.96em;
   border-bottom: 1px solid var(--borda);
   vertical-align: middle;
 }
@@ -506,8 +547,9 @@ button.abrir-os {
     border-color 0.15s;
 }
 button.abrir-os:hover {
-  background: rgba(79, 140, 255, 0.24);
+  background: var(--azul-suave);
   border-color: var(--azul);
+  filter: brightness(1.05);
 }
 
 /* ---------- Formulário de configurações ---------- */
@@ -639,7 +681,7 @@ button.abrir-os:hover {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(3, 6, 12, 0.72);
+  background: var(--overlay);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
@@ -931,8 +973,8 @@ button.abrir-os:hover {
   margin-left: 6px;
   border-radius: 999px;
   background: var(--vermelho);
-  color: #fff;
-  font-size: 0.72em;
+  color: var(--sobre-vermelho);
+  font-size: 0.74em;
   font-weight: 700;
   vertical-align: middle;
 }
@@ -953,8 +995,8 @@ button.abrir-os:hover {
   cursor: pointer;
   white-space: nowrap;
 }
-.botao-aceitar { background: var(--ok); color: #06371f; }
-.botao-recusar { background: var(--vermelho); color: #4a0d0d; }
+.botao-aceitar { background: var(--ok); color: var(--sobre-ok); }
+.botao-recusar { background: var(--vermelho); color: var(--sobre-vermelho); }
 .botao-aceitar:hover { filter: brightness(1.08); }
 .botao-recusar:hover { filter: brightness(1.08); }
 
@@ -971,18 +1013,74 @@ button.abrir-os:hover {
   bottom: 20px;
   z-index: 1000;
   background: var(--ok);
-  color: #06371f;
-  padding: 12px 18px;
+  color: var(--sobre-ok);
+  padding: 13px 20px;
   border-radius: 10px;
   font-weight: 700;
-  font-size: 0.95em;
+  font-size: 0.98em;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  max-width: 320px;
+  max-width: 340px;
 }
 .toast.toast-erro {
   background: var(--vermelho);
-  color: #4a0d0d;
+  color: var(--sobre-vermelho);
 }
 @media (max-width: 620px) {
   .toast { left: 16px; right: 16px; bottom: 16px; max-width: none; text-align: center; }
+}
+
+/* ----- Botão de alternar tema (claro/escuro) ----- */
+.botao-tema {
+  background: transparent;
+  border: 1px solid var(--borda);
+  color: var(--texto-suave);
+  width: 38px;
+  height: 34px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 1em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.botao-tema:hover {
+  background: var(--bg-elev-2);
+  color: var(--texto);
+  border-color: var(--borda-forte);
+}
+
+/* ----- Paginação de tabelas ----- */
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 16px;
+}
+.pag-btn {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--borda-forte);
+  color: var(--texto);
+  padding: 9px 16px;
+  border-radius: var(--raio-s);
+  font-size: 0.92em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pag-btn:hover:not(:disabled) {
+  border-color: var(--azul);
+  background: var(--azul-suave);
+}
+.pag-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pag-info {
+  font-size: 0.9em;
+  color: var(--texto-suave);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
