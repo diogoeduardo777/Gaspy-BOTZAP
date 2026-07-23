@@ -46,7 +46,9 @@ CREATE TABLE IF NOT EXISTS pedidos (
   tipo TEXT NOT NULL DEFAULT 'pedido' CHECK (tipo IN ('agendamento', 'pedido')),
   itens_json TEXT NOT NULL DEFAULT '[]',
   total_centavos INTEGER NOT NULL DEFAULT 0,
-  status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'pago', 'cancelado', 'concluido')),
+  -- Ciclo do pedido de produto: nasce 'pendente'; o dono confirma ('aceito') ou nega ('recusado');
+  -- 'pago'/'concluido'/'cancelado' seguem disponíveis para o acompanhamento manual no painel.
+  status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'aceito', 'recusado', 'pago', 'cancelado', 'concluido')),
   pix_txid TEXT NOT NULL DEFAULT '',
   criado_em TEXT NOT NULL DEFAULT (datetime('now')),
   atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))

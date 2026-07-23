@@ -64,11 +64,13 @@ async function mostrarTelaApp() {
   await carregarConfig();
   carregarMensagens();
   iniciarMonitorWhatsApp();
+  iniciarMonitorPendentes();
 }
 
 // ---------- Status da conexão do WhatsApp (bolinha + QR no painel) ----------
 
 let monitorWhatsApp = null;
+let monitorPendentes = null;
 
 async function atualizarStatusWhatsApp() {
   // Só consulta enquanto o painel está visível (evita chamadas quando deslogado).
@@ -112,6 +114,13 @@ function iniciarMonitorWhatsApp() {
   atualizarStatusWhatsApp();
   if (monitorWhatsApp) return; // evita múltiplos timers
   monitorWhatsApp = setInterval(atualizarStatusWhatsApp, 5000);
+}
+
+// Mantém o badge de pedidos pendentes atualizado mesmo quando o dono está em outra aba.
+function iniciarMonitorPendentes() {
+  atualizarContadorPendentes();
+  if (monitorPendentes) return; // evita múltiplos timers
+  monitorPendentes = setInterval(atualizarContadorPendentes, 15000);
 }
 
 document.getElementById('btn-criar-senha').addEventListener('click', async () => {
@@ -162,6 +171,8 @@ document.querySelectorAll('.aba-btn').forEach((botao) => {
     document.querySelectorAll('.aba').forEach((a) => a.classList.add('oculto'));
     botao.classList.add('ativo');
     document.getElementById(`aba-${botao.dataset.aba}`).classList.remove('oculto');
+    // Ao abrir a aba de pedidos, recarrega para mostrar pedidos que chegaram desde o login.
+    if (botao.dataset.aba === 'atendimentos') carregarAtendimentos();
   });
 });
 
@@ -280,6 +291,8 @@ document.getElementById('form-novo-servico').addEventListener('submit', async (e
 
 const STATUS_PEDIDO = {
   pendente: 'Pendente',
+  aceito: 'Aceito',
+  recusado: 'Recusado',
   pago: 'Pago',
   cancelado: 'Cancelado',
   concluido: 'Concluído'
@@ -294,6 +307,8 @@ const STATUS_SERVICO = {
 
 const CORES_STATUS = {
   pendente: { bg: '#fef9c3', cor: '#854d0e' },
+  aceito: { bg: '#dcfce7', cor: '#15803d' },
+  recusado: { bg: '#fee2e2', cor: '#b91c1c' },
   em_analise: { bg: '#fef9c3', cor: '#854d0e' },
   pago: { bg: '#dcfce7', cor: '#15803d' },
   concluido: { bg: '#dcfce7', cor: '#15803d' },
@@ -318,11 +333,17 @@ async function carregarAtendimentos() {
   }
 
   corpo.innerHTML = '';
+  let qtdPendentes = 0;
   atendimentos.forEach((item) => {
     const ehProduto = item.tipo === 'produto';
     const mapaStatus = ehProduto ? STATUS_PEDIDO : STATUS_SERVICO;
     const endpoint = ehProduto ? `/api/pedidos/${item.id}/status` : `/api/servicos/${item.id}/status`;
     const identificador = ehProduto ? `#${item.id}` : item.protocolo;
+
+    // Pedido de produto ainda não confirmado: em vez do select técnico, mostra os botões grandes
+    // Aceitar/Recusar — a ação óbvia para o dono. (OS de assistência tem seu próprio ciclo.)
+    const ehPedidoPendente = ehProduto && item.status === 'pendente';
+    if (ehPedidoPendente) qtdPendentes += 1;
 
     // "Entregue?" só faz sentido para serviços (aparelho retirado pelo cliente).
     const celulaEntregue = ehProduto
@@ -334,7 +355,21 @@ async function carregarAtendimentos() {
       ? `<td>${esc(identificador)}</td>`
       : `<td><button class="abrir-os" data-id="${item.id}">${esc(identificador)} 📄</button></td>`;
 
+    const celulaStatus = ehPedidoPendente
+      ? `<td>
+           <div class="acoes-pedido">
+             <button class="botao-aceitar" data-id="${item.id}">✅ Aceitar</button>
+             <button class="botao-recusar" data-id="${item.id}">❌ Recusar</button>
+           </div>
+         </td>`
+      : `<td>
+           <select class="status-atendimento" data-endpoint="${endpoint}">
+             ${Object.entries(mapaStatus).map(([valor, rotulo]) => `<option value="${valor}" ${valor === item.status ? 'selected' : ''}>${rotulo}</option>`).join('')}
+           </select>
+         </td>`;
+
     const linha = document.createElement('tr');
+    if (ehPedidoPendente) linha.className = 'linha-pendente';
     linha.innerHTML = `
       <td>${ehProduto ? '🛍️ Produto' : '🔧 Serviço'}</td>
       ${celulaId}
@@ -342,16 +377,14 @@ async function carregarAtendimentos() {
       <td>${esc(item.telefone)}</td>
       <td>${esc(item.descricao)}</td>
       <td>${item.valor_reais === null ? '—' : esc(item.valor_reais)}</td>
-      <td>
-        <select class="status-atendimento" data-endpoint="${endpoint}">
-          ${Object.entries(mapaStatus).map(([valor, rotulo]) => `<option value="${valor}" ${valor === item.status ? 'selected' : ''}>${rotulo}</option>`).join('')}
-        </select>
-      </td>
+      ${celulaStatus}
       ${celulaEntregue}
       <td>${esc(item.criado_em)}</td>
     `;
     corpo.appendChild(linha);
   });
+
+  atualizarBadgePendentes(qtdPendentes);
 
   corpo.querySelectorAll('.status-atendimento').forEach((select) => {
     colorirStatus(select);
@@ -362,6 +395,15 @@ async function carregarAtendimentos() {
         body: JSON.stringify({ status: select.value })
       });
     });
+  });
+
+  // Aceitar/Recusar um pedido pendente: chama a API, avisa o cliente (no backend) e recarrega a
+  // lista para refletir o novo estado.
+  corpo.querySelectorAll('.botao-aceitar').forEach((botao) => {
+    botao.addEventListener('click', () => responderPedido(botao.dataset.id, 'aceito'));
+  });
+  corpo.querySelectorAll('.botao-recusar').forEach((botao) => {
+    botao.addEventListener('click', () => responderPedido(botao.dataset.id, 'recusado'));
   });
 
   corpo.querySelectorAll('.toggle-retirado').forEach((checkbox) => {
@@ -376,6 +418,38 @@ async function carregarAtendimentos() {
   corpo.querySelectorAll('.abrir-os').forEach((botao) => {
     botao.addEventListener('click', () => abrirModalOS(botao.dataset.id));
   });
+}
+
+// Aceita ou recusa um pedido pendente e recarrega a lista (o backend avisa o cliente no WhatsApp).
+async function responderPedido(pedidoId, status) {
+  await chamarApi(`/api/pedidos/${pedidoId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status })
+  });
+  await carregarAtendimentos();
+}
+
+// Atualiza o "badge" (contador vermelho) da aba de pedidos. Zero = escondido.
+function atualizarBadgePendentes(total) {
+  const badge = document.getElementById('badge-pendentes');
+  if (!badge) return;
+  if (total > 0) {
+    badge.textContent = total;
+    badge.classList.remove('oculto');
+  } else {
+    badge.classList.add('oculto');
+  }
+}
+
+// Consulta leve só do contador de pendentes (sem recarregar a tabela) — mantém o badge vivo mesmo
+// quando o dono está em outra aba. Silencioso em caso de erro (ex: sessão expirada).
+async function atualizarContadorPendentes() {
+  try {
+    const { total } = await chamarApi('/api/pedidos/pendentes/contagem');
+    atualizarBadgePendentes(total);
+  } catch {
+    /* ignora: o login/monitor já trata sessão expirada */
+  }
 }
 
 // ---------- Ordem de Serviço (OS) ----------

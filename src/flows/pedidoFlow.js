@@ -3,6 +3,7 @@
 const cardapioRepo = require('../database/cardapioRepo');
 const pedidosRepo = require('../database/pedidosRepo');
 const sessoesRepo = require('../database/sessoesRepo');
+const notificador = require('../bot/notificador');
 const { gerarPixCopiaECola } = require('../pix/gerarPixCopiaECola');
 const { formatarPreco } = require('../utils/formatador');
 const { resolverTexto } = require('../config/textos');
@@ -112,7 +113,12 @@ function criarPedidoComPix(config, telefone, clienteNome, carrinho, tipo = 'pedi
     pixTxid: `PEDIDO${gerarTxidCurto(telefone)}`
   });
 
-  let resposta = `✅ *Pedido #${pedido.id} recebido!*\n\n${montarResumoCarrinho(carrinho)}\n\n👤 *Nome:* ${clienteNome}\n`;
+  // O pedido nasce PENDENTE (default do banco). Avisa o dono para ele aceitar/recusar no painel.
+  // Fire-and-forget: uma falha ao notificar (bot offline etc.) não pode travar a resposta ao
+  // cliente — o pedido já está salvo e aparece destacado no painel de qualquer forma.
+  notificador.notificarNovoPedidoAoDono(pedido, config).catch(() => {});
+
+  let resposta = `🧾 *Pedido #${pedido.id} recebido!*\n\n${montarResumoCarrinho(carrinho)}\n\n👤 *Nome:* ${clienteNome}\n\n${resolverTexto(config, 'pedido_aguardando_confirmacao')}\n`;
 
   if (config.chave_pix) {
     const pixCopiaECola = gerarPixCopiaECola({

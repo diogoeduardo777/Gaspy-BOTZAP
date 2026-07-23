@@ -260,12 +260,29 @@ function criarApp() {
   app.patch('/api/pedidos/:pedidoId/status', autenticar, (req, res) => {
     const config = estabelecimentoAtual();
     const { status } = req.body || {};
-    const statusValidos = ['pendente', 'pago', 'cancelado', 'concluido'];
+    const statusValidos = ['pendente', 'aceito', 'recusado', 'pago', 'cancelado', 'concluido'];
     if (!statusValidos.includes(status)) {
       return res.status(400).json({ erro: `Status inválido. Use um de: ${statusValidos.join(', ')}` });
     }
-    const pedido = pedidosRepo.atualizarStatus(config.id, Number(req.params.pedidoId), status);
+    const id = Number(req.params.pedidoId);
+    const anterior = pedidosRepo.buscarPedido(config.id, id);
+    const pedido = pedidosRepo.atualizarStatus(config.id, id, status);
+
+    // Ao ACEITAR ou RECUSAR (e só quando o status realmente mudou), o cliente é avisado no
+    // WhatsApp. Fire-and-forget para não segurar a resposta do painel nem quebrar se o bot
+    // estiver offline.
+    if (anterior && anterior.status !== status && (status === 'aceito' || status === 'recusado')) {
+      notificador.notificarClientePedido(pedido, config, status).catch(() => {});
+    }
     res.json(pedido);
+  });
+
+  // Contador leve de pedidos pendentes — usado pelo painel para o "sino"/badge da aba de pedidos
+  // sem precisar recarregar a lista inteira.
+  app.get('/api/pedidos/pendentes/contagem', autenticar, (req, res) => {
+    const config = estabelecimentoAtual();
+    const total = pedidosRepo.listarPedidos(config.id).filter((p) => p.status === 'pendente').length;
+    res.json({ total });
   });
 
   app.get('/api/servicos', autenticar, (req, res) => {

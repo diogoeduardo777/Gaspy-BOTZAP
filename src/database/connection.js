@@ -42,6 +42,43 @@ if (!colunasEstabelecimentos.includes('tipo_estabelecimento')) {
   db.exec("ALTER TABLE estabelecimentos ADD COLUMN tipo_estabelecimento TEXT NOT NULL DEFAULT 'comida' CHECK (tipo_estabelecimento IN ('comida', 'assistencia', 'loja'))");
 }
 
+// Ampliação do CHECK de status em `pedidos` (+ 'aceito', + 'recusado'). O SQLite NÃO permite
+// alterar um CHECK com ALTER TABLE, então é preciso reconstruir a tabela. É NÃO-DESTRUTIVO
+// (copia todas as linhas dentro de uma transação) e IDEMPOTENTE (só roda se o CHECK atual ainda
+// não conhecer 'aceito'). Como nenhuma outra tabela referencia `pedidos`, o DROP/RENAME é seguro
+// mesmo com foreign_keys ligado. Bancos novos já nascem com o CHECK completo (schema.sql), então
+// aqui só entram bancos antigos.
+const pedidosTabela = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pedidos'").get();
+if (pedidosTabela && pedidosTabela.sql && !pedidosTabela.sql.includes("'aceito'")) {
+  const migrarPedidos = db.transaction(() => {
+    db.exec(`
+      CREATE TABLE pedidos_migracao (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        estabelecimento_id INTEGER NOT NULL REFERENCES estabelecimentos(id),
+        telefone TEXT NOT NULL,
+        cliente_nome TEXT NOT NULL DEFAULT '',
+        tipo TEXT NOT NULL DEFAULT 'pedido' CHECK (tipo IN ('agendamento', 'pedido')),
+        itens_json TEXT NOT NULL DEFAULT '[]',
+        total_centavos INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'aceito', 'recusado', 'pago', 'cancelado', 'concluido')),
+        pix_txid TEXT NOT NULL DEFAULT '',
+        criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+        atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    db.exec(`
+      INSERT INTO pedidos_migracao
+        (id, estabelecimento_id, telefone, cliente_nome, tipo, itens_json, total_centavos, status, pix_txid, criado_em, atualizado_em)
+      SELECT id, estabelecimento_id, telefone, cliente_nome, tipo, itens_json, total_centavos, status, pix_txid, criado_em, atualizado_em
+      FROM pedidos
+    `);
+    db.exec('DROP TABLE pedidos');
+    db.exec('ALTER TABLE pedidos_migracao RENAME TO pedidos');
+    db.exec('CREATE INDEX IF NOT EXISTS idx_pedidos_estabelecimento ON pedidos(estabelecimento_id)');
+  });
+  migrarPedidos();
+}
+
 const colunasServicosAgendados = db.prepare("PRAGMA table_info(servicos_agendados)").all().map((c) => c.name);
 if (!colunasServicosAgendados.includes('preco_centavos')) {
   db.exec('ALTER TABLE servicos_agendados ADD COLUMN preco_centavos INTEGER');

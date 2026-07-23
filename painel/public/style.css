@@ -917,3 +917,49 @@ button.abrir-os:hover {
   .wa-status-chip #wa-status-texto { display: none; } /* no mobile, só a bolinha no header */
   .wa-qr-banner { padding: 14px 16px; }
 }
+
+/* ----- Fase 3: aceite/recusa de pedidos ----- */
+
+/* Contador (badge) de pedidos pendentes, colado no nome da aba. */
+.badge-pendentes {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: var(--vermelho);
+  color: #fff;
+  font-size: 0.72em;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+/* Botões grandes e óbvios de Aceitar/Recusar no pedido pendente. */
+.acoes-pedido {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.botao-aceitar,
+.botao-recusar {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 0.85em;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.botao-aceitar { background: var(--ok); color: #06371f; }
+.botao-recusar { background: var(--vermelho); color: #4a0d0d; }
+.botao-aceitar:hover { filter: brightness(1.08); }
+.botao-recusar:hover { filter: brightness(1.08); }
+
+/* Realce da linha de um pedido ainda não confirmado. */
+.linha-pendente td {
+  background: rgba(248, 191, 96, 0.12);
+  box-shadow: inset 3px 0 0 var(--vermelho);
+}

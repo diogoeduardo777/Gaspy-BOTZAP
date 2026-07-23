@@ -176,6 +176,30 @@ const CATALOGO = [
         variaveis: [],
         multilinha: false,
         padrao: '_Após o pagamento, aguarde a confirmação do estabelecimento._'
+      },
+      {
+        chave: 'pedido_aguardando_confirmacao',
+        rotulo: 'Aviso de que o pedido aguarda confirmação',
+        ajuda: 'Mostrado logo após o cliente fechar o pedido. Deixa claro que o pedido ainda NÃO foi aceito — a loja precisa confirmar.',
+        variaveis: [],
+        multilinha: false,
+        padrao: '⏳ Recebemos seu pedido! Assim que a loja confirmar, te avisamos por aqui.'
+      },
+      {
+        chave: 'pedido_aceito',
+        rotulo: 'Aviso quando o dono ACEITA o pedido',
+        ajuda: 'Enviado automaticamente quando você aceita um pedido no painel.',
+        variaveis: ['loja', 'pedido'],
+        multilinha: true,
+        padrao: '✅ Seu pedido {pedido} foi *confirmado* pela loja! Já estamos cuidando dele. 😊'
+      },
+      {
+        chave: 'pedido_recusado',
+        rotulo: 'Aviso quando o dono RECUSA o pedido',
+        ajuda: 'Enviado automaticamente quando você recusa um pedido no painel.',
+        variaveis: ['loja', 'pedido'],
+        multilinha: true,
+        padrao: '😔 Sobre o pedido {pedido}: infelizmente não vamos conseguir atender desta vez. Qualquer dúvida, fale com a gente.'
       }
     ]
   },

@@ -95,6 +95,38 @@ async function notificarLembreteRetirada(servico, config) {
   return enviarMensagem(servico.telefone, texto);
 }
 
+// Converte um número "de gente" (ex: 5511999998888, com ou sem símbolos) no id de contato do
+// WhatsApp. Retorna null se não houver número — aí não há para quem avisar.
+function idWhatsAppDoNumero(numero) {
+  const digitos = String(numero || '').replace(/\D/g, '');
+  return digitos ? `${digitos}@c.us` : null;
+}
+
+// Avisa o DONO (no numero_atendente configurado) que chegou um pedido novo, para ele abrir o
+// painel e aceitar/recusar. Se não houver numero_atendente, apenas não envia (o painel ainda
+// destaca o pedido pendente). Mensagem fixa, voltada ao dono (não é personalizável pelo cliente).
+async function notificarNovoPedidoAoDono(pedido, config) {
+  if (!pedido) return false;
+  const destino = idWhatsAppDoNumero(config && config.numero_atendente);
+  if (!destino) return false;
+  const total = (Number(pedido.total_centavos || 0) / 100).toFixed(2).replace('.', ',');
+  const texto =
+    `🛎️ *Novo pedido #${pedido.id}* em ${config.nome_empresa}\n\n` +
+    `👤 ${pedido.cliente_nome || 'Cliente'}\n` +
+    `💰 R$ ${total}\n\n` +
+    `Abra o painel para *aceitar* ou *recusar* este pedido.`;
+  return enviarMensagem(destino, texto);
+}
+
+// Avisa o CLIENTE que seu pedido foi aceito ou recusado pelo dono. `novoStatus` é 'aceito' ou
+// 'recusado'; usa o texto personalizável correspondente.
+async function notificarClientePedido(pedido, config, novoStatus) {
+  if (!pedido || !pedido.telefone) return false;
+  const chave = novoStatus === 'aceito' ? 'pedido_aceito' : 'pedido_recusado';
+  const texto = resolverTexto(config, chave, { pedido: `#${pedido.id}` });
+  return enviarMensagem(pedido.telefone, texto);
+}
+
 module.exports = {
   configurarCliente,
   marcarPronto,
@@ -105,5 +137,7 @@ module.exports = {
   obterStatusConexao,
   notificacoesAtivas,
   notificarStatusServico,
-  notificarLembreteRetirada
+  notificarLembreteRetirada,
+  notificarNovoPedidoAoDono,
+  notificarClientePedido
 };
